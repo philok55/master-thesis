@@ -4,7 +4,6 @@ name := "master-project-philo"
 ThisBuild / version          := "0.1"
 
 Compile / scalaSource := baseDirectory.value / "src"
-Compile / unmanagedSourceDirectories += baseDirectory.value / "gen"
 unmanagedJars in Compile += file("assets/json-simple-1.1.1.jar")
 
 fork in run := true

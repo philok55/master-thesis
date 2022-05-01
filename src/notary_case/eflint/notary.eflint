@@ -1,5 +1,3 @@
-#
-
 Fact citizen
 Fact address
 Fact notary
@@ -23,6 +21,8 @@ Fact property-count
 
 Fact mean-value
   Identified by Int
+    Conditioned by
+      property-count > 0
     Derived from
       (Sum(Foreach property: property.value When property) / property-count)
 
@@ -59,29 +59,3 @@ Act add-nim-coverage
   Creates nim-covered(mortgage)
   Holds when
     nim-coverage-allowed(mortgage)
-
-##
-
-Fact citizen
-  Identified by Philo
-
-Fact notary
-  Identified by "Hans de Notaris"
-
-Fact address
-  Identified by "Science Park", "Beresteinseweg", "Huizermaatweg"
-
-Fact value
-  Identified by 50000, 100000, 150000, 200000, 250000, 300000
-
-###
-
-property(address = "Science Park", value = 150000).
-property(address = "Beresteinseweg", value = 300000).
-property(address = "Huizermaatweg", value = 100000).
-
-####
-
-+ownership(property(address = "Beresteinseweg", value = 300000), Philo).
-create-mortgage("Hans de Notaris", Philo, property(address = "Science Park", value = 150000), 150000).
-add-nim-coverage("Hans de Notaris", mortgage(property(address = "Science Park", value = 150000), Philo, 150000)).
