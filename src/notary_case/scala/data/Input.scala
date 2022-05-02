@@ -1,12 +1,14 @@
 package notary_case.data
 
+import notary_case.Property
+
 object Input {
-  var properties = List(
-    Map("Address" -> "Beresteinseweg", "Value" -> 750000),
-    Map("Address" -> "Huizermaatweg", "Value" -> 345000),
-    Map("Address" -> "SciencePark", "Value" -> 1900000),
-    Map("Address" -> "Dorpsstraat", "Value" -> 245000),
-    Map("Address" -> "Middenweg", "Value" -> 322500),
-    Map("Address" -> "Jol", "Value" -> 345000),
+  var properties = List[Property](
+    new Property("Beresteinseweg", 750000),
+    new Property("Huizermaatweg", 345000),
+    new Property("SciencePark", 1900000),
+    new Property("Dorpsstraat", 245000),
+    new Property("Middenweg", 322500),
+    new Property("Jol", 345000),
   )
 }

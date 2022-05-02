@@ -17,8 +17,8 @@ object NotaryMain {
       message match {
         case m:TestCase1 => {
           println("Starting NotaryMain: TestCase1")
-          val notary = context.spawn(Notary(), "HansDeNotaris")
-          notary ! Notary.LoadCity()
+          val monitor = context.spawn(NimMonitor(), "NimMonitor")
+          val notary = context.spawn(Notary(monitor), "HansDeNotaris")
           val alice = context.spawn(Citizen(notary), "Alice")
           Thread.sleep(5000)
         }

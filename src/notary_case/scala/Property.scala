@@ -1,4 +1,4 @@
 package notary_case
 
-class Property(var address: String, var value: Int)
+class Property(val address: String, val value: Int)
 
