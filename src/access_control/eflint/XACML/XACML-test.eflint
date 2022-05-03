@@ -1,0 +1,28 @@
+// XACML policy translated to eFLINT
+
+Fact subject
+Fact resource
+Fact action
+
+Fact target Identified by subject * resource * action  
+
+// Policy target (1 per policy)
+Fact applicable-for-policy Identified by target
+  Holds when target.resource == "SampleServer"
+
+// Rule targets (1 for every rule)
+Fact applicable-for-login Identified by target
+  Holds when applicable-for-policy() &&
+             target.action == "login"
+
+// Rules
+Act login-rule
+  Actor subject
+  Recipient resource
+  Related to action
+  Conditioned by
+    applicable-for-login(target())
+  Holds when
+    hour-of-the-day >= 9 && hour-of-the-day < 17
+
+Fact hour-of-the-day Identified by Int
