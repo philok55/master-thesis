@@ -1,0 +1,38 @@
+#
+
+Fact client
+
+Fact id
+Fact resource Identified by id
+
+Fact subject
+Fact action
+
+Fact target Identified by
+  subject * resource * action
+
+Fact hour-of-the-day Identified by Int
+
+Act login
+  Actor client
+  Recipient target
+  Conditioned by
+    hour-of-the-day >= 9 && hour-of-the-day < 17
+
+##
+
+Fact subject Identified by "Any"
+Fact action Identified by "Any"
+
+Fact client Identified by "Client application"
+
+Fact resource Identified by "SampleServer"
+
+###
+
+hour-of-the-day(14).
+
+####
+
+login("Client application", target("Any", resource("SampleServer"), "Any"))
+

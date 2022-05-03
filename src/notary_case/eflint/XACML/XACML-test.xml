@@ -1,0 +1,61 @@
+<Policy PolicyId="SamplePolicy" RuleCombiningAlgId="urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:permit-overrides">
+
+    <!-- This Policy only applies to requests on the SampleServer -->
+    <Target>
+        <Subjects>
+            <AnySubject />
+        </Subjects>
+        <Resources>
+            <ResourceMatch MatchId="urn:oasis:names:tc:xacml:1.0:function:string-equal">
+                <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">SampleServer</AttributeValue>
+                <ResourceAttributeDesignator DataType="http://www.w3.org/2001/XMLSchema#string" AttributeId="urn:oasis:names:tc:xacml:1.0:resource:resource-id" />
+            </ResourceMatch>
+        </Resources>
+        <Actions>
+            <AnyAction />
+        </Actions>
+    </Target>
+
+    <!-- Rule to see if we should allow the Subject to login -->
+    <Rule RuleId="LoginRule" Effect="Permit">
+
+        <!-- Only use this Rule if the action is login -->
+        <Target>
+            <Subjects>
+                <AnySubject />
+            </Subjects>
+            <Resources>
+                <AnyResource />
+            </Resources>
+            <Actions>
+                <ActionMatch MatchId="urn:oasis:names:tc:xacml:1.0:function:string-equal">
+                    <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">login</AttributeValue>
+                    <ActionAttributeDesignator DataType="http://www.w3.org/2001/XMLSchema#string" AttributeId="ServerAction" />
+                </ActionMatch>
+            </Actions>
+        </Target>
+
+        <!-- Only allow logins from 9am to 5pm -->
+        <Condition FunctionId="urn:oasis:names:tc:xacml:1.0:function:and">
+            <Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:time-greater-than-or-equal"
+                <Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:time-one-and-only">
+                    <EnvironmentAttributeSelector DataType="http://www.w3.org/2001/XMLSchema#time" AttributeId="urn:oasis:names:tc:xacml:1.0:environment:current-time" />
+                </Apply>
+                <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#time">09:00:00</AttributeValue>
+            </Apply>
+            <Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:time-less-than-or-equal"
+                <Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:time-one-and-only">
+                    <EnvironmentAttributeSelector DataType="http://www.w3.org/2001/XMLSchema#time" AttributeId="urn:oasis:names:tc:xacml:1.0:environment:current-time" />
+                </Apply>
+                <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#time">17:00:00</AttributeValue>
+            </Apply>
+        </Condition>
+
+    </Rule>
+
+    <!-- We could include other Rules for different actions here -->
+
+    <!-- A final, "fall-through" Rule that always Denies -->
+    <Rule RuleId="FinalRule" Effect="Deny" />
+
+</Policy>
