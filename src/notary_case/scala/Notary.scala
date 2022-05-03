@@ -22,7 +22,6 @@ object Notary {
     Input.properties.foreach(p => { monitor ! NimMonitor.RegisterProperty(p) })
     message match {
       case m:RequestCoveredMortgage =>
-        context.log.info(s"${m.citizen} requested covered mortgage for property ${m.property.address} with value ${m.value}")
         val citizen_id = "\"" + resolver.toSerializationFormat(m.citizen) + "\""
         val mortgage = new Mortgage(m.property, m.citizen, m.value)
         NotaryDB.mortgages = mortgage :: NotaryDB.mortgages

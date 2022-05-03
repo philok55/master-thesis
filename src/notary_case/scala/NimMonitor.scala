@@ -28,12 +28,15 @@ object NimMonitor {
             (implicit resolver: ActorRefResolver): Behavior[Message] = Behaviors.receive { (context, message) =>
     message match {
       case m:RegisterNotary =>
+        context.log.info(s"Registering notary ${m.notary_id}")
         eflint_server ! NormActor.Phrase(s"Fact notary Identified by ${m.notary_id}")
         Behaviors.same
       case m:RegisterProperty =>
+        context.log.info(s"Registering property ${m.property.address}")
         eflint_server ! NormActor.Phrase(s"+property(address(${m.property.address}), value(${m.property.value}))")
         Behaviors.same
       case m:AddCoveredMortgage =>
+        context.log.info(s"${m.mortgage.citizen} requested covered mortgage for property ${m.mortgage.property.address} with value ${m.mortgage.value}")
         val citizen_id = "\"" + resolver.toSerializationFormat(m.mortgage.citizen) + "\""
         // XXX: Violation reporting for this action results in an exception now, but calling eFLINT works correctly
         eflint_server ! NormActor.Phrase(
