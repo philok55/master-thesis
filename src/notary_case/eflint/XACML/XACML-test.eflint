@@ -14,7 +14,7 @@ Fact applicable-for-policy Identified by target
 
 // Rule targets (1 for every rule)
 Fact applicable-for-login Identified by target
-  Holds when applicable-for-policy(target) &&
+  Holds when applicable-for-policy() &&
              target.action == "login"
 
 // Rules
@@ -23,7 +23,7 @@ Act login-rule
   Recipient resource
   Related to action
   Conditioned by
-    applicable-for-login(target(subject=subject, resource=resource, action=action))
+    applicable-for-login(target())
   Holds when
     hour-of-the-day >= 9 && hour-of-the-day < 17
 

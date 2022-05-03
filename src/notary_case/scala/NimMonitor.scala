@@ -38,7 +38,6 @@ object NimMonitor {
       case m:AddCoveredMortgage =>
         context.log.info(s"${m.mortgage.citizen} requested covered mortgage for property ${m.mortgage.property.address} with value ${m.mortgage.value}")
         val citizen_id = "\"" + resolver.toSerializationFormat(m.mortgage.citizen) + "\""
-        // XXX: Violation reporting for this action results in an exception now, but calling eFLINT works correctly
         eflint_server ! NormActor.Phrase(
           handler = handler_ref,
           phrase = s"create-covered-mortgage(${m.notary_id}, ${citizen_id}, property(${m.mortgage.property.address}, ${m.mortgage.property.value}), value(${m.mortgage.value}))"
