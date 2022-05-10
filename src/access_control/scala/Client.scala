@@ -6,21 +6,20 @@ import akka.actor.typed.ActorRefResolver
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl._
 
-object ClientApp {
+object Client {
   trait Message {}
-  case class TryAccessResource(resource: String, action: String) extends Message
+  case class TryAccessResource(resource: Resource, action: String) extends Message
   case class AccessGranted(message: String) extends Message
   case class AccessDenied(message: String) extends Message
 
-  def apply(enforcer: ActorRef[PolicyEnforcer.Message]): Behavior[Message] = Behaviors.setup { context =>
-    // enforcer ! PolicyReasoner.RegisterSubject(context.self)
-    listen(enforcer)
+  def apply(): Behavior[Message] = Behaviors.setup { context =>
+    listen()
   }
 
-  def listen(enforcer: ActorRef[PolicyEnforcer.Message]): Behavior[Message] = Behaviors.receive { (context, message) =>
+  def listen(): Behavior[Message] = Behaviors.receive { (context, message) =>
     message match {
       case m: TryAccessResource =>
-        enforcer ! PolicyEnforcer.RequestAccess(new Request(context.self, m.resource, m.action))
+        m.resource.enforcedBy ! PolicyEnforcer.RequestAccess(new Request(context.self, m.resource, m.action))
         Behaviors.same
       case m: AccessGranted =>
         println(s"Access granted: $message")

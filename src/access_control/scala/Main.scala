@@ -16,11 +16,20 @@ object AccessControlMain {
       message match {
         case m: TestCase1 => {
           println("Starting Access Control system: TestCase1")
+          val client1 = context.spawn(Client(), "Philo")
+          val client2 = context.spawn(Client(), "ScraperBot")
+
           val reasoner = context.spawn(PolicyReasoner(), "policy-reasoner")
           val enforcer = context.spawn(PolicyEnforcer(reasoner), "policy-enforcer")
-          val admin = context.spawn(AdminApp(reasoner, enforcer), "admin-app")
-          admin ! AdminApp.CreateClientApp("client-app")
-          admin ! AdminApp.CreateResource("protected-resource")
+
+          val resource1 = new Resource(enforcer, "SampleServer")
+          context.spawn(resource1.start(), resource1.name)
+          val resource2 = new Resource(enforcer, "SuperSectretServer")
+          context.spawn(resource2.start(), resource2.name)
+
+          client1 ! Client.TryAccessResource(resource1, "login")
+          client1 ! Client.TryAccessResource(resource2, "login")
+
           Thread.sleep(5000)
         }
       }
