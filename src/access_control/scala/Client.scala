@@ -22,10 +22,10 @@ object Client {
         m.resource.enforcedBy ! PolicyEnforcer.RequestAccess(new Request(context.self, m.resource, m.action))
         Behaviors.same
       case m: AccessGranted =>
-        println(s"Access granted: $message")
+        println(s"Access granted: ${m.message}")
         Behaviors.same
       case m: AccessDenied =>
-        println(s"Access denied: $message")
+        println(s"Access denied: ${m.message}")
         Behaviors.same
     }
   }

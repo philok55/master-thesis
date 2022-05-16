@@ -18,10 +18,8 @@ Fact applicable-for-login Identified by target
              target.action == "login"
 
 // Rules
-Act login-rule
-  Actor subject
-  Recipient resource
-  Related to action
+Fact login-rule Identified by
+  subject * resource * action
   Conditioned by
     applicable-for-login(target())
   Holds when
