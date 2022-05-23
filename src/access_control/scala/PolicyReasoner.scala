@@ -39,18 +39,17 @@ object PolicyReasoner {
             (implicit resolver: ActorRefResolver): Behavior[Message] = Behaviors.receive { (context, message) => 
     message match {
       case m: RegisterResource =>
-        context.log.info(s"(Reasoner) Registering resource ${m.resource.name}")
         ReasonerDB.resources = m.resource :: ReasonerDB.resources
         Behaviors.same
       case m: RequestAccess =>
         val hour = LocalDateTime.now(ZoneId.of("Europe/Amsterdam")).format(DateTimeFormatter.ofPattern("HH"))
         eflint_server ! NormActor.Phrase(s"+hour-of-the-day($hour)")
-        val handler_ref = context.spawn(response_handler(m, eflint_server), s"response-handler-${m.internalRequest.id}")
+        context.spawn(responseHandler(m, eflint_server), s"response-handler-${m.internalRequest.id}")
         Behaviors.same
     }
   }
 
-  def response_handler(m: RequestAccess, eflint_server: ActorRef[NormActor.Message])
+  def responseHandler(m: RequestAccess, eflint_server: ActorRef[NormActor.Message])
       (implicit resolver: ActorRefResolver): Behavior[norms.NormActor.QueryResponse] = Behaviors.setup { context =>
     implicit val timeout: Timeout = 3.seconds
     val subject_id = "\"" + resolver.toSerializationFormat(m.internalRequest.request.subject) + "\""

@@ -23,9 +23,9 @@ object AccessControlMain {
           val enforcer = context.spawn(PolicyEnforcer(reasoner), "policy-enforcer")
 
           val resource1 = new Resource(enforcer, "SampleServer")
-          context.spawn(resource1.start(), resource1.name)
+          resource1.ref = Some(context.spawn(resource1.start(), resource1.name))
           val resource2 = new Resource(enforcer, "SuperSectretServer")
-          context.spawn(resource2.start(), resource2.name)
+          resource2.ref = Some(context.spawn(resource2.start(), resource2.name))
 
           client1 ! Client.TryAccessResource(resource1, "login")
           client1 ! Client.TryAccessResource(resource2, "login")

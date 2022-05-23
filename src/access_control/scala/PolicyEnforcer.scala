@@ -5,6 +5,8 @@ import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorRefResolver
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl._
+import akka.util.Timeout
+import scala.concurrent.duration.DurationInt
 
 object EnforcerDB {
   var resources: Map[String, ActorRef[ResourceTypes.Message]] = Map()
@@ -18,15 +20,16 @@ object PolicyEnforcer {
   case class RequestAccess(request: Request) extends Message
   case class AccessDenied(requestId: Int) extends Message
   case class AccessGranted(requestId: Int) extends Message
+  case class ResourceResponse(response: String) extends Message
 
   def apply(reasoner: ActorRef[PolicyReasoner.Message]): Behavior[Message] = Behaviors.receive { (context, message) =>
     message match {
       case m: RegisterResource =>
-        context.log.info(s"(Enforcer) Registering resource ${m.resource.name}")
         EnforcerDB.resources += (m.resource.name -> m.senderRef)
         reasoner ! PolicyReasoner.RegisterResource(m.resource)
         Behaviors.same
       case m: RequestAccess =>
+        context.log.info(s"Requesting to execute action '${m.request.action}' to ${m.request.resource.name} for client ${m.request.subject}")
         val internalRequest = new InternalRequest(m.request, EnforcerDB.nextId)
         EnforcerDB.nextId += 1
         EnforcerDB.pendingRequests += (internalRequest.id -> m.request)
@@ -34,12 +37,30 @@ object PolicyEnforcer {
         Behaviors.same
       case m: AccessDenied =>
         val request = EnforcerDB.pendingRequests(m.requestId)
+        EnforcerDB.pendingRequests -= m.requestId
         request.subject ! Client.AccessDenied("Access denied by eFLINT")
         Behaviors.same
       case m: AccessGranted =>
         val request = EnforcerDB.pendingRequests(m.requestId)
-        request.subject ! Client.AccessGranted("Access granted by eFLINT")
+        EnforcerDB.pendingRequests -= m.requestId
+        context.spawn(resourceRequest(request), s"resourceRequest-${m.requestId}")
         Behaviors.same
+    }
+  }
+
+  def resourceRequest(request: Request): Behavior[ResourceResponse] = Behaviors.setup { context =>
+    request.resource.ref match {
+      case Some(ref) =>
+        ref ! ResourceTypes.ClientRequest(request, context.self)
+        Behaviors.receiveMessage {
+          case ResourceResponse(response) => {
+            request.subject ! Client.ResourceResponse(response)
+            Behaviors.stopped
+          }
+        }
+      case None =>
+        context.log.info(s"(Enforcer) Resource ${request.resource.name} not found")
+        Behaviors.stopped
     }
   }
 }
