@@ -49,23 +49,22 @@ object PolicyReasoner {
     }
   }
 
-  def responseHandler(m: RequestAccess, eflint_server: ActorRef[NormActor.Message])
+  def responseHandler(mReq: RequestAccess, eflint_server: ActorRef[NormActor.Message])
       (implicit resolver: ActorRefResolver): Behavior[norms.NormActor.QueryResponse] = Behaviors.setup { context =>
-    implicit val timeout: Timeout = 3.seconds
-    val subject_id = "\"" + resolver.toSerializationFormat(m.internalRequest.request.subject) + "\""
-    val action = "\"" + m.internalRequest.request.action + "\""
-    context.ask(eflint_server, (ref: ActorRef[norms.NormActor.QueryResponse]) => NormActor.Query(
-                replyTo = ref,
-                phrase = s"?login-rule(subject(${subject_id}), resource(${m.internalRequest.request.resource.name}), action(${action}))")) {
-      case Success(NormActor.Response(success, reason)) => AdaptedQueryResponse(m.internalRequest.id, success, reason)
-      case Failure(_)                                   => AdaptedQueryResponse(m.internalRequest.id, false, "Timeout")
-    }
+    val subject_id = "\"" + resolver.toSerializationFormat(mReq.internalRequest.request.subject) + "\""
+    val action = "\"" + mReq.internalRequest.request.action + "\""
+        
+    eflint_server ! NormActor.Query(
+      replyTo = context.self, 
+      phrase = s"?login-rule(subject(${subject_id}), resource(${mReq.internalRequest.request.resource.name}), action(${action}))"
+    )
+
     Behaviors.receiveMessage {
-      case AdaptedQueryResponse(id, success, reason) => {
-        if (success)
-          m.enforcer ! PolicyEnforcer.AccessGranted(id)
+      case mResp: norms.NormActor.Response => {
+        if (mResp.success)
+          mReq.enforcer ! PolicyEnforcer.AccessGranted(mReq.internalRequest.id)
         else
-          m.enforcer ! PolicyEnforcer.AccessDenied(id)
+          mReq.enforcer ! PolicyEnforcer.AccessDenied(mReq.internalRequest.id)
         Behaviors.stopped
       }
     }
