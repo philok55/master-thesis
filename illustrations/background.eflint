@@ -1,0 +1,38 @@
+Fact student       Identified by String
+Fact assignment    Identified by String
+Fact teacher       Identified by String
+
+Fact homework      Identified by 
+                   student * assignment * teacher
+Fact homework-due  Identified by homework
+
+Duty finish-homework
+  Holder         student
+  Claimant       teacher
+  Related to     assignment
+  Holds when     homework()
+  Violated when  homework-due()
+
+Act submit-homework
+  Actor          student
+  Recipient      teacher
+  Related to     assignment
+  Terminates     homework()
+  Holds when     homework()
+  
+// initial domain
+Fact student     Identified by Alice
+Fact teacher     Identified by Bob
+Fact assignment  Identified by Essay
+
+// ------------------------------------------------------------
+
+// homework assigned
++homework(Alice, Essay, Bob).
+
+// homework due, duty violated
++homework-due(homework(Alice, Essay, Bob)).
+?Violated(finish-homework).
+
+// homework submitted
+submit-homework(Alice, Bob, Essay).
