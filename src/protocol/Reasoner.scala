@@ -15,6 +15,6 @@ object Reasoner {
           println(s"Translation to eFLINT: ${EFLINTAdapter(m)}")
         }
       }
-      Behaviors.stopped
+      Behaviors.same
     }
 }
