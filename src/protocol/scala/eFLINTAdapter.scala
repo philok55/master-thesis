@@ -1,18 +1,18 @@
 package protocol
 
-object EFLINTAdapter {
+object EflintAdapter {
   def apply(message: Message): String = {
     message match {
-      case Inform(predicate)  => predicateToEFLINT(predicate)
-      case InformAct(act)     => actToEFLINT(act)
-      case InformEvent(event) => eventToEFLINT(event)
-      case Request(predicate) => predicateToEFLINT(predicate, request = true)
-      case RequestAct(act)    => actToEFLINT(act, request = true)
+      case Inform(predicate)  => predicateToEflint(predicate)
+      case InformAct(act)     => actToEflint(act)
+      case InformEvent(event) => eventToEflint(event)
+      case Request(predicate) => predicateToEflint(predicate, request = true)
+      case RequestAct(act)    => actToEflint(act, request = true)
       case _                  => "invalid"
     }
   }
 
-  def predicateToEFLINT(
+  def predicateToEflint(
       predicate: Predicate,
       nested: Boolean = false,
       request: Boolean = false
@@ -29,7 +29,7 @@ object EFLINTAdapter {
             case PString(value) => s""""$value""""
             case PInt(value)    => value.toString
             case Predicate(name, instance, state) =>
-              predicateToEFLINT(Predicate(name, instance, state), nested = true)
+              predicateToEflint(Predicate(name, instance, state), nested = true)
           }
           .mkString(", ")
 
@@ -40,15 +40,14 @@ object EFLINTAdapter {
         else
           s"$modifier$name($instanceString)."
       }
-      case _ => "invalid"
     }
   }
 
-  def actToEFLINT(act: Act, request: Boolean = false): String = {
+  def actToEflint(act: Act, request: Boolean = false): String = {
     act match {
       case Act(name, actor, recipient, related_to, _) => {
         val relatedToString = related_to
-          .map(predicateToEFLINT(_, nested = true))
+          .map(predicateToEflint(_, nested = true))
           .mkString(", ")
         val result = if (relatedToString == "") {
           s"$name($actor, $recipient)"
@@ -57,14 +56,10 @@ object EFLINTAdapter {
         }
         if (request) s"?Enabled($result)." else result
       }
-      case _ => "invalid"
     }
   }
 
-  def eventToEFLINT(event: Event): String = {
-    event match {
-      case Event(name, _) => s"$name()."
-      case _              => "invalid"
-    }
+  def eventToEflint(event: Event): String = {
+    s"${event.name}()."
   }
 }

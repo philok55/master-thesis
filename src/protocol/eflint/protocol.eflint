@@ -1,0 +1,17 @@
+// Default eFLINT code that can be included in other eFLINT programs
+// that are meant to be used through Akka. 
+//
+// It exports some functionality that is used by the Reasoner Actors,
+// like setting the current time before each message is processed.
+
+Fact actor
+Fact reasoner Identified by actor
+
+Fact hour Identified by Int
+Fact current-hour Identified by hour
+
+Act set-current-hour
+    Actor reasoner
+    Related to hour
+    Obfuscates current-hour
+    Creates current-hour()

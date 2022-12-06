@@ -15,27 +15,34 @@ object ProtocolTestMain {
     implicit val resolver: ActorRefResolver = message.resolver
     message match {
       case m: TestAdapter => {
-        val reasoner = context.spawn(Reasoner(), "reasoner")
+        val reasoner = context.spawn(
+          Reasoner("src/protocol/eflint/accessControl.eflint"),
+          "reasoner"
+        )
+        // reasoner ! Inform(Predicate("subject", List(PString("alice"))))
         reasoner ! Inform(
           Predicate(
-            "resource",
-            List(Predicate("testresource", List(PString("test"))))
+            "target",
+            List(
+              Predicate("subject", List(PString("alice"))),
+              Predicate("resource", List(PString("SampleServer"))),
+              Predicate("action", List(PString("read")))
+            )
           )
         )
-        reasoner ! InformAct(
-          Act(
-            "login",
-            reasoner,
-            reasoner,
-            List[Predicate](),
-            LocalDateTime.now()
+        reasoner ! Request(
+          Predicate(
+            "target",
+            List(
+              Predicate("subject", List(PString("alice"))),
+              Predicate("resource", List(PString("SampleServer"))),
+              Predicate("action", List(PString("read")))
+            )
           )
         )
-        reasoner ! InformEvent(Event("testevent", LocalDateTime.now()))
-        reasoner ! Request(Predicate("testresource", List(PString("test"))))
         reasoner ! RequestAct(
           Act(
-            "login",
+            "access-resource",
             reasoner,
             reasoner,
             List[Predicate](),
@@ -44,6 +51,7 @@ object ProtocolTestMain {
         )
       }
     }
+    Thread.sleep(5000)
     Behaviors.stopped
   }
 }
