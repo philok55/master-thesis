@@ -11,7 +11,7 @@ Fact hour Identified by Int
 Fact current-hour Identified by hour
 
 Act set-current-hour
-    Actor reasoner
-    Related to hour
-    Obfuscates current-hour
-    Creates current-hour()
+  Actor reasoner
+  Related to hour
+  Obfuscates current-hour
+  Creates current-hour()

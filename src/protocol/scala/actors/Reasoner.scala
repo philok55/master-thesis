@@ -8,8 +8,6 @@ import akka.actor.typed.scaladsl._
 import norms.NormActor
 
 object Reasoner {
-  
-
   def apply(
       eflintFile: String
   )(implicit resolver: ActorRefResolver): Behavior[Message] =

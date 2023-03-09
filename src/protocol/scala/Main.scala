@@ -19,7 +19,7 @@ object ProtocolTestMain {
           Reasoner("src/protocol/eflint/accessControl.eflint"),
           "reasoner"
         )
-        // reasoner ! Inform(Predicate("subject", List(PString("alice"))))
+        reasoner ! Inform(Predicate("subject", List(PString("alice"))))
         reasoner ! Inform(
           Predicate(
             "target",

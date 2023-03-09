@@ -50,11 +50,11 @@ object EflintAdapter {
           .map(predicateToEflint(_, nested = true))
           .mkString(", ")
         val result = if (relatedToString == "") {
-          s"$name($actor, $recipient)"
+          s"$name(${actor.path}, ${recipient.path})"
         } else {
-          s"$name($actor, $recipient, $relatedToString)"
+          s"$name(${actor.path}, ${recipient.path}, $relatedToString)"
         }
-        if (request) s"?Enabled($result)." else result
+        if (request) s"?Enabled($result)." else s"$result."
       }
     }
   }

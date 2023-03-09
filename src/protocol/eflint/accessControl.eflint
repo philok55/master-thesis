@@ -6,7 +6,7 @@ Fact subject
 Fact resource
 Fact action
 
-Fact target Identified by subject * resource * action  
+Fact target Identified by subject * resource * action
 
 // Policy target (1 per policy)
 Fact applicable-for-policy Identified by target
@@ -18,9 +18,11 @@ Fact applicable-for-login Identified by target
              target.action == "login"
 
 // Rules
-Act access-resource Identified by
-  subject * resource * action
+Act access-resource 
+  Actor subject
+  Recipient resource
+  Related to action
   Conditioned by
     applicable-for-login(target())
-//  Holds when
-//    current-hour >= 9 && current-hour < 17
+  // Holds when
+  //   current-hour >= 9 && current-hour < 17
