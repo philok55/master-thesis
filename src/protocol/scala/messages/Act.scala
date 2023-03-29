@@ -5,8 +5,8 @@ import java.time.LocalDateTime
 
 final case class Act(
     name: String,
-    actor: ActorRef[Message],
-    recipient: ActorRef[Message],
-    relatedTo: List[Predicate],
-    executionTime: LocalDateTime
+    actor: Predicate,
+    recipient: Predicate = null,
+    relatedTo: List[Predicate] = List[Predicate](),
+    executionTime: LocalDateTime = LocalDateTime.now()
 )

@@ -7,7 +7,7 @@ import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl._
 import norms.NormActor
 
-object Reasoner {
+trait ReasonerActor {
   def apply(
       eflintFile: String
   )(implicit resolver: ActorRefResolver): Behavior[Message] =
@@ -35,7 +35,7 @@ object Reasoner {
             phraseResponseHandler(m, eflint_server),
             s"presponse-handler-${java.util.UUID.randomUUID.toString()}"
           )
-        case _ => println("Reasoner received unknown message")
+        case _ => println("Error: reasoner received unknown message")
       }
       Behaviors.same
     }
@@ -46,14 +46,24 @@ object Reasoner {
   )(implicit
       resolver: ActorRefResolver
   ): Behavior[NormActor.QueryResponse] = Behaviors.setup { context =>
+    val phrase = EflintAdapter(msg)
     eflint_server ! NormActor.Query(
       replyTo = context.self,
-      phrase = EflintAdapter(msg)
+      phrase = phrase
     )
 
     Behaviors.receiveMessage {
       case response: norms.NormActor.Response => {
-        println(s"Reasoner received response: $response")
+        println(
+          s"Reasoner received response. Query: $phrase; Response: $response"
+        )
+        msg match {
+          case m: RequestAct => {
+            if (response.success) m.replyTo ! Permit(m.act)
+            else m.replyTo ! Forbid(m.act)
+          }
+          case _ => println("NotImplementedError")
+        }
         Behaviors.stopped
       }
     }
@@ -65,14 +75,18 @@ object Reasoner {
   )(implicit
       resolver: ActorRefResolver
   ): Behavior[norms.Message] = Behaviors.setup { context =>
+    val phrase = EflintAdapter(msg)
+    println(s"Reasoner sending phrase: $phrase")
     eflint_server ! NormActor.Phrase(
-      phrase = EflintAdapter(msg),
+      phrase = phrase,
       handler = context.self
     )
 
     Behaviors.receiveMessage {
       case response: norms.NormActor.Message => {
-        println(s"Reasoner received response: $response")
+        println(
+          s"Reasoner received response. Query: $phrase; Response: $response"
+        )
         Behaviors.stopped
       }
     }

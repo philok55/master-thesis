@@ -6,9 +6,10 @@ object EflintAdapter {
       case Inform(predicate)  => predicateToEflint(predicate)
       case InformAct(act)     => actToEflint(act)
       case InformEvent(event) => eventToEflint(event)
-      case Request(predicate) => predicateToEflint(predicate, request = true)
-      case RequestAct(act)    => actToEflint(act, request = true)
-      case _                  => "invalid"
+      case Request(predicate, replyTo) =>
+        predicateToEflint(predicate, request = true)
+      case RequestAct(act, replyTo) => actToEflint(act, request = true)
+      case _                        => "invalid"
     }
   }
 
@@ -46,14 +47,25 @@ object EflintAdapter {
   def actToEflint(act: Act, request: Boolean = false): String = {
     act match {
       case Act(name, actor, recipient, related_to, _) => {
+        val actorString = predicateToEflint(actor, nested = true)
         val relatedToString = related_to
           .map(predicateToEflint(_, nested = true))
           .mkString(", ")
-        val result = if (relatedToString == "") {
-          s"$name(${actor.path}, ${recipient.path})"
-        } else {
-          s"$name(${actor.path}, ${recipient.path}, $relatedToString)"
-        }
+        val result =
+          if (recipient == null) {
+            if (relatedToString == "") {
+              s"$name($actorString)"
+            } else {
+              s"$name($actorString, $relatedToString)"
+            }
+          } else {
+            val recipientString = predicateToEflint(recipient, nested = true)
+            if (relatedToString == "") {
+              s"$name($actorString, $recipientString)"
+            } else {
+              s"$name($actorString, $recipientString, $relatedToString)"
+            }
+          }
         if (request) s"?Enabled($result)." else s"$result."
       }
     }
