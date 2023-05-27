@@ -1,9 +1,7 @@
 // eFLINT policy for our case study
 
-// Basic objects
 Fact user
 Fact document
-Fact action
 
 Fact owner Identified by user
 Fact tenant Identified by user
@@ -11,7 +9,7 @@ Fact tenant Identified by user
 Fact rental-agreement Identified by tenant * document
 
 // Access control policy for tenant document access
-Act access-document 
+Act access-document
   Actor tenant
   Related to document
   Holds when

@@ -1,4 +1,4 @@
-package caseStudy
+package caseStudies
 
 import protocol._
 

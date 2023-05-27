@@ -1,4 +1,4 @@
-package caseStudy
+package caseStudies
 
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.ActorRef

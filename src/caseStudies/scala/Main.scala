@@ -1,4 +1,4 @@
-package caseStudy
+package caseStudies
 
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.ActorRef
@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 
 import protocol._
 
-object CaseStudy {
+object CaseStudies {
   sealed trait Scenario { val resolver: ActorRefResolver }
   final case class AccessControlCase(resolver: ActorRefResolver)
       extends Scenario
@@ -19,7 +19,7 @@ object CaseStudy {
     message match {
       case m: AccessControlCase => {
         val reasoner = context.spawn(
-          Reasoner("src/caseStudy/eflint/caseStudy.eflint"),
+          Reasoner("src/caseStudies/eflint/accessControl.eflint"),
           "reasoner"
         )
         val enforcer = context.spawn(
@@ -61,10 +61,10 @@ object CaseStudy {
   }
 }
 
-object CaseStudyMain extends App {
-  val system: ActorSystem[CaseStudy.Scenario] =
-    ActorSystem(CaseStudy(), "CaseStudy")
+object CaseStudiesMain extends App {
+  val system: ActorSystem[CaseStudies.Scenario] =
+    ActorSystem(CaseStudies(), "CaseStudies")
   val resolver = ActorRefResolver(system)
 
-  system ! CaseStudy.AccessControlCase(resolver)
+  system ! CaseStudies.AccessControlCase(resolver)
 }
