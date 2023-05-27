@@ -14,11 +14,16 @@ object CaseStudies {
   sealed trait Scenario { val resolver: ActorRefResolver }
   final case class AccessControlCase(resolver: ActorRefResolver)
       extends Scenario
+  final case class ExPostCase(resolver: ActorRefResolver) extends Scenario
 
   def apply(): Behavior[Scenario] = Behaviors.receive { (context, message) =>
     implicit val resolver: ActorRefResolver = message.resolver
     message match {
       case m: AccessControlCase => {
+        println("-----------------")
+        println("Access control case study")
+        println("-----------------")
+
         val reasoner = context.spawn(
           Reasoner("src/caseStudies/eflint/accessControl.eflint"),
           "reasoner"
@@ -60,6 +65,15 @@ object CaseStudies {
         tenant2 ! Tenant.FetchAgreement("agreement1")
         // Reject (unregistered tenant, not created by owner)
         tenant3 ! Tenant.FetchAgreement("agreement1")
+
+        // Violation:
+        // reasoner ! InformAct(new AccessDocument(new PTenant("tenant2"), "agreement1"))
+      }
+
+      case m: ExPostCase => {
+        println("-----------------")
+        println("Ex-post enforcement case study")
+        println("-----------------")
       }
     }
     Thread.sleep(5000)

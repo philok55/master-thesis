@@ -92,6 +92,12 @@ trait ReasonerActor {
         )
         Behaviors.stopped
       }
+      case response: norms.Message => {
+        println(
+          s"Reasoner received response. Query: $phrase; Response: $response"
+        )
+        Behaviors.stopped
+      }
     }
   }
 }
