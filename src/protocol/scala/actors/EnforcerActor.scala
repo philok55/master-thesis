@@ -10,16 +10,17 @@ import java.time.LocalDateTime
 trait EnforcerActor {
   def protocolRequestsLoop(reasoner: ActorRef[Message]): Behavior[Message] =
     Behaviors.receive { (context, message) =>
-      if (acceptOrSendReject(message)) {
-        message match {
-          case m: RequestAct =>
+      message match {
+        case m: RequestAct =>
+          if (acceptOrSendReject(message)) {
             context.spawn(
               actRequestHandler(m, reasoner),
               s"enf-actrequest-handler-${java.util.UUID.randomUUID.toString()}"
             )
-          case _ =>
-            println("Protocol violated: invalid message received by Enforcer")
-        }
+          }
+        case m: Inform => handleInform(m.predicate)
+        case _ =>
+          println("Protocol violated: invalid message received by Enforcer")
       }
       Behaviors.same
     }
@@ -50,4 +51,6 @@ trait EnforcerActor {
     }
 
   def acceptOrSendReject(message: Message): Boolean
+
+  def handleInform(predicate: Predicate): Unit
 }

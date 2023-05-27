@@ -10,16 +10,10 @@ import protocol._
 
 object KnowledgeBase {
   var tenants: List[String] = List()
-  var agreements: List[(Document, String)] = List()
+  var agreements: List[PRentalAgreement] = List()
 }
 
 object Enforcer extends EnforcerActor {
-  final case class RegisterTenant(tenant: ActorRef[Message]) extends Message
-  final case class RegisterAgreement(
-      document: Document,
-      tenant: ActorRef[Message]
-  ) extends Message
-
   def apply(
       reasoner: ActorRef[Message]
   )(implicit resolver: ActorRefResolver): Behavior[Message] =
@@ -30,25 +24,6 @@ object Enforcer extends EnforcerActor {
       )
 
       Behaviors.receiveMessage {
-        case m: RegisterTenant => {
-          KnowledgeBase.tenants = m.tenant.path.name :: KnowledgeBase.tenants
-          reasoner ! Inform(Tenant.getPredicate(m.tenant.path.name))
-          Behaviors.same
-        }
-        case m: RegisterAgreement => {
-          KnowledgeBase.agreements =
-            (m.document, m.tenant.path.name) :: KnowledgeBase.agreements
-          reasoner ! Inform(
-            Predicate(
-              "rental-agreement",
-              List(
-                Tenant.getPredicate(m.tenant.path.name),
-                m.document.getPredicate()
-              )
-            )
-          )
-          Behaviors.same
-        }
         case m: Message => {
           listener ! m
           Behaviors.same
@@ -70,5 +45,17 @@ object Enforcer extends EnforcerActor {
       }
     }
     case _ => false
+  }
+
+  override def handleInform(predicate: Predicate): Unit = {
+    predicate match {
+      case tenant: PTenant => {
+        KnowledgeBase.tenants = tenant.name :: KnowledgeBase.tenants
+      }
+      case agreement: PRentalAgreement => {
+        println("Enforcer: received agreement")
+        KnowledgeBase.agreements = agreement :: KnowledgeBase.agreements
+      }
+    }
   }
 }

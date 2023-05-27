@@ -26,27 +26,30 @@ object CaseStudies {
           Enforcer(reasoner),
           "enforcer"
         )
+        val monitor = context.spawn(
+          Monitor(reasoner, enforcer, MonitorActors),
+          "monitor"
+        )
         val tenant1 = context.spawn(
           Tenant(enforcer),
           "tenant1"
         )
+        TenantCreated(tenant1.path.name)()
         val tenant2 = context.spawn(
           Tenant(enforcer),
           "tenant2"
         )
+        TenantCreated(tenant2.path.name)()
         val tenant3 = context.spawn(
           Tenant(enforcer),
           "tenant3"
         )
-        enforcer ! Enforcer.RegisterTenant(tenant1)
-        enforcer ! Enforcer.RegisterTenant(tenant2)
-        // reasoner ! Request(Predicate("tenant", List(PString("tenant1"))), enforcer)
-        val agreementDocument = new Document(
+        val agreement = new Document(
           id = "agreement1",
           fileName = "agreement1.pdf",
           content = "Content of agreement 1."
         )
-        enforcer ! Enforcer.RegisterAgreement(agreementDocument, tenant1)
+        RentalAgreementCreated(agreement.id, tenant1.path.name)()
         Thread.sleep(2000)
         // Access allowed
         tenant1 ! Tenant.AccessDocument("agreement1")

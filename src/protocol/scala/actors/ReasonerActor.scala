@@ -5,9 +5,12 @@ import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorRefResolver
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl._
+import scala.collection.Set
 import norms.NormActor
 
 trait ReasonerActor {
+  protected def blockedActions = Set[String]() 
+
   def apply(
       eflintFile: String
   )(implicit resolver: ActorRefResolver): Behavior[Message] =

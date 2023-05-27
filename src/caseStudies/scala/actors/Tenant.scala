@@ -15,7 +15,7 @@ object Tenant extends ApplicationActor {
     Predicate("tenant", List(PString(name)))
 
   def apply(
-      enforcer: ActorRef[Message]
+      enforcer: ActorRef[Message],
   )(implicit resolver: ActorRefResolver): Behavior[Message] =
     Behaviors.receive { (context, message) =>
       message match {

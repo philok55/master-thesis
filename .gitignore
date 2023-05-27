@@ -4,6 +4,8 @@
 project/
 target/
 
+src/POC/
+
 .bloop/
 .bsp/
 .metals/
