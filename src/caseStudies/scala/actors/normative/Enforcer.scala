@@ -5,21 +5,23 @@ import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorRefResolver
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl._
+import scala.collection.Map
 
 import protocol._
 
-object KnowledgeBase {
-  var tenants: List[String] = List()
-  var agreements: List[PRentalAgreement] = List()
-}
-
 object Enforcer extends EnforcerActor {
+  object KnowledgeBase {
+    var tenants: List[String] = List()
+    var agreements: List[PRentalAgreement] = List()
+  }
+
   def apply(
-      reasoner: ActorRef[Message]
+      reasoner: ActorRef[Message],
+      contacts: Map[String, ActorRef[Message]] = Map()
   )(implicit resolver: ActorRefResolver): Behavior[Message] =
     Behaviors.setup { context =>
       val listener = context.spawn(
-        protocolRequestsLoop(reasoner),
+        protocolRequestsLoop(reasoner, contacts),
         s"enf-protocol-loop-${java.util.UUID.randomUUID.toString()}"
       )
 
@@ -53,8 +55,20 @@ object Enforcer extends EnforcerActor {
         KnowledgeBase.tenants = tenant.name :: KnowledgeBase.tenants
       }
       case agreement: PRentalAgreement => {
-        println("Enforcer: received agreement")
         KnowledgeBase.agreements = agreement :: KnowledgeBase.agreements
+      }
+    }
+  }
+
+  override def actPermitted(
+      act: Act,
+      contacts: Map[String, ActorRef[Message]] = Map()
+  ): Unit = {
+    val database = contacts("db")
+    act match {
+      case a: AccessDocument => {
+        println(s"Enforcer: facilitating access to ${a.documentId}")	
+        database ! Database.GetAgreement(a.documentId, a.actor)
       }
     }
   }

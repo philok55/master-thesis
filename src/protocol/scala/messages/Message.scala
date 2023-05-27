@@ -17,6 +17,7 @@ final case class InformViolatedInvariant(predicate: Predicate) extends Message
 
 final case class Request(predicate: Predicate, replyTo: ActorRef[Message]) extends QueryMessage
 final case class RequestAct(act: Act, replyTo: ActorRef[Message]) extends QueryMessage
+final case class RequestDuty(duty: Duty, replyTo: ActorRef[Message]) extends QueryMessage
 
 final case class Permit(act: Act) extends Message
 final case class Permitted(act: Act) extends Message

@@ -79,7 +79,7 @@ trait ReasonerActor {
       resolver: ActorRefResolver
   ): Behavior[norms.Message] = Behaviors.setup { context =>
     val phrase = EflintAdapter(msg)
-    println(s"Reasoner sending phrase: $phrase")
+    println(s"Reasoner evaluating phrase: $phrase")
     eflint_server ! NormActor.Phrase(
       phrase = phrase,
       handler = context.self

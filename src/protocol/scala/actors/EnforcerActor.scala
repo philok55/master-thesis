@@ -6,28 +6,45 @@ import akka.actor.typed.ActorRefResolver
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl._
 import java.time.LocalDateTime
+import scala.collection.Map
 
 trait EnforcerActor {
-  def protocolRequestsLoop(reasoner: ActorRef[Message]): Behavior[Message] =
+  final case class AddContact(name: String, contact: ActorRef[Message])
+      extends Message
+
+  def protocolRequestsLoop(
+      reasoner: ActorRef[Message],
+      contacts: Map[String, ActorRef[Message]] = Map()
+  ): Behavior[Message] =
     Behaviors.receive { (context, message) =>
       message match {
-        case m: RequestAct =>
+        case m: AddContact => {
+          protocolRequestsLoop(reasoner, contacts + (m.name -> m.contact))
+        }
+        case m: RequestAct => {
           if (acceptOrSendReject(message)) {
             context.spawn(
-              actRequestHandler(m, reasoner),
+              actRequestHandler(m, reasoner, contacts),
               s"enf-actrequest-handler-${java.util.UUID.randomUUID.toString()}"
             )
           }
-        case m: Inform => handleInform(m.predicate)
-        case _ =>
+          Behaviors.same
+        }
+        case m: Inform => {
+          handleInform(m.predicate)
+          Behaviors.same
+        }
+        case _ => {
           println("Protocol violated: invalid message received by Enforcer")
+          Behaviors.same
+        }
       }
-      Behaviors.same
     }
 
   def actRequestHandler(
       message: RequestAct,
-      reasoner: ActorRef[Message]
+      reasoner: ActorRef[Message],
+      contacts: Map[String, ActorRef[Message]] = Map()
   ): Behavior[Message] =
     Behaviors.setup { context =>
       reasoner ! RequestAct(message.act, context.self)
@@ -35,10 +52,12 @@ trait EnforcerActor {
       Behaviors.receiveMessage {
         case m: Permit => {
           message.replyTo ! Permitted(message.act)
+          actPermitted(message.act, contacts)
           Behaviors.stopped
         }
         case m: Forbid => {
           message.replyTo ! Forbidden(message.act)
+          actForbidden(message.act, contacts)
           Behaviors.stopped
         }
         case _ => {
@@ -50,7 +69,17 @@ trait EnforcerActor {
       }
     }
 
-  def acceptOrSendReject(message: Message): Boolean
+  def acceptOrSendReject(message: Message): Boolean = true
 
-  def handleInform(predicate: Predicate): Unit
+  def actPermitted(
+      act: Act,
+      contacts: Map[String, ActorRef[Message]] = Map()
+  ): Unit = {}
+
+  def actForbidden(
+      act: Act,
+      contacts: Map[String, ActorRef[Message]] = Map()
+  ): Unit = {}
+
+  def handleInform(predicate: Predicate): Unit = {}
 }

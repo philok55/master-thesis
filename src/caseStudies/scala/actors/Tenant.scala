@@ -5,40 +5,45 @@ import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorRefResolver
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl._
+import scala.collection.Map
 
 import protocol._
 
 object Tenant extends ApplicationActor {
-  final case class AccessDocument(documentId: String) extends Message
+  final case class FetchAgreement(documentId: String) extends ApplicationMessage
 
-  def getPredicate(name: String): Predicate =
-    Predicate("tenant", List(PString(name)))
-
-  def apply(
+  override def handleApplicationMessage(
+      message: ApplicationMessage,
       enforcer: ActorRef[Message],
-  )(implicit resolver: ActorRefResolver): Behavior[Message] =
-    Behaviors.receive { (context, message) =>
-      message match {
-        case m: AccessDocument => {
-          val act = Act(
-            name = "access-document",
-            actor = getPredicate(context.self.path.name),
-            relatedTo = List(
-              Predicate("document", List(PString(m.documentId)))
-            )
-          )
-          context.spawn(
-            actRequestHandler(act, enforcer),
-            s"app-act-request-${java.util.UUID.randomUUID.toString()}"
-          )
-        }
+      self: ActorRef[Message],
+      contacts: Map[String, ActorRef[Message]] = Map()
+  ): Behavior[Message] =
+    message match {
+      case m: FetchAgreement => {
+        val act = new AccessDocument(new PTenant(self.path.name), m.documentId)
+        sendQuery(Left(act), enforcer, self)
+        Behaviors.same
       }
-      Behaviors.same
+      case m: Database.AgreementFetched => {
+        println(s"Agreement received by ${self.path.name}: ${m.document.fileName}. Content: ${m.document.content}")
+        Behaviors.same
+      }
     }
 
-  override def actPermitted(act: Act): Unit = println("Act permitted")
+  override def actPermitted(act: Act): Unit = act match {
+    case a: AccessDocument =>
+      println(s"Tenant: access request to ${a.documentId} permitted")
+  }
 
-  override def actForbidden(act: Act): Unit = println("Act forbidden")
+  override def actForbidden(act: Act): Unit = act match {
+    case a: AccessDocument =>
+      println(s"Tenant: access request to ${a.documentId} forbidden")
+  }
 
-  override def actRejected(act: Act): Unit = println("Act rejected")
+  override def actRejected(act: Act): Unit = act match {
+    case a: AccessDocument =>
+      println(s"Tenant: access request to ${a.documentId} rejected")
+  }
+
+  override def dutyReceived(duty: Duty): Unit = println("Duty received")
 }

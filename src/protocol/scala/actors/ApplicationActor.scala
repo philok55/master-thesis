@@ -5,40 +5,55 @@ import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorRefResolver
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl._
+import scala.collection.Map
+
+trait ApplicationMessage extends Message {}
 
 trait ApplicationActor {
-  def actRequestHandler(
-      act: Act,
-      enforcer: ActorRef[Message]
-  ): Behavior[Message] =
-    Behaviors.setup { context =>
-      enforcer ! RequestAct(act, context.self)
-
-      Behaviors.receiveMessage {
-        case m: Permitted => {
-          actPermitted(m.act)
-          Behaviors.stopped
-        } 
-        case m: Forbidden => {
-          actForbidden(m.act)
-          Behaviors.stopped
+  def apply(
+      enforcer: ActorRef[Message],
+      contacts: Map[String, ActorRef[Message]] = Map()
+  )(implicit resolver: ActorRefResolver): Behavior[Message] =
+    Behaviors.receive { (context, message) =>
+      {
+        message match {
+          case m: ApplicationMessage =>
+            handleApplicationMessage(m, enforcer, context.self, contacts)
+          case m: Permitted  => actPermitted(m.act)
+          case m: Forbidden  => actForbidden(m.act)
+          case m: Rejected   => actRejected(m.act)
+          case m: InformDuty => dutyReceived(m.duty)
+          case _ =>
+            println(
+              "Protocol violated: invalid message received in response to RequestAct"
+            )
         }
-        case m: Rejected => {
-          actRejected(m.act)
-          Behaviors.stopped
-        }
-        case _ => {
-          println(
-            "Protocol violated: invalid message received in response to RequestAct"
-          )
-          Behaviors.stopped
-        }
+        Behaviors.same
       }
     }
 
-  def actPermitted(act: Act): Unit
+  def sendQuery(
+      content: Either[Act, Duty],
+      enforcer: ActorRef[Message],
+      replyTo: ActorRef[Message]
+  ): Unit =
+    content match {
+      case Left(act)   => enforcer ! RequestAct(act, replyTo)
+      case Right(duty) => enforcer ! RequestDuty(duty, replyTo)
+    }
 
-  def actForbidden(act: Act): Unit
+  def handleApplicationMessage(
+      message: ApplicationMessage,
+      enforcer: ActorRef[Message],
+      self: ActorRef[Message],
+      contacts: Map[String, ActorRef[Message]] = Map()
+  ): Behavior[Message] = Behaviors.same
 
-  def actRejected(act: Act): Unit
+  def actPermitted(act: Act): Unit = {}
+
+  def actForbidden(act: Act): Unit = {}
+
+  def actRejected(act: Act): Unit = {}
+
+  def dutyReceived(duty: Duty): Unit = {}
 }

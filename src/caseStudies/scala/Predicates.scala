@@ -2,10 +2,13 @@ package caseStudies
 
 import protocol._
 
-class PTenant(val name: String, override val state: TruthValue = True)
+final class PTenant(val name: String, override val state: TruthValue = True)
     extends Predicate("tenant", List(PString(name)), state) {}
 
-class PRentalAgreement(
+final class PDocument(val id: String, override val state: TruthValue = True)
+    extends Predicate("document", List(PString(id)), state) {}
+
+final class PRentalAgreement(
     val id: String,
     val tenantName: String,
     override val state: TruthValue = True
