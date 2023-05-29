@@ -49,8 +49,8 @@ object Enforcer extends EnforcerActor {
     case _ => false
   }
 
-  override def handleInform(predicate: Predicate): Unit = {
-    predicate match {
+  override def handleInform(proposition: Proposition): Unit = {
+    proposition match {
       case tenant: PTenant => {
         KnowledgeBase.tenants = tenant.name :: KnowledgeBase.tenants
       }

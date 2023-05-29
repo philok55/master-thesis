@@ -21,6 +21,14 @@ trait EnforcerActor {
         case m: AddContact => {
           protocolRequestsLoop(reasoner, contacts + (m.name -> m.contact))
         }
+        case m: Inform => {
+          handleInform(m.proposition)
+          Behaviors.same
+        }
+        case m: InformDuty => {
+          handleInformDuty(m.duty)
+          Behaviors.same
+        }
         case m: RequestAct => {
           if (acceptOrSendReject(message)) {
             context.spawn(
@@ -30,8 +38,21 @@ trait EnforcerActor {
           }
           Behaviors.same
         }
-        case m: Inform => {
-          handleInform(m.predicate)
+        case m: RequestDuty => {
+          if (acceptOrSendReject(message)) {
+            context.spawn(
+              dutyRequestHandler(m, reasoner, contacts),
+              s"enf-dutyrequest-handler-${java.util.UUID.randomUUID.toString()}"
+            )
+          }
+          Behaviors.same
+        }
+        case m: InformViolatedAct => {
+          violatedAct(m.act, contacts)
+          Behaviors.same
+        }
+        case m: InformViolatedDuty => {
+          violatedDuty(m.duty, contacts)
           Behaviors.same
         }
         case _ => {
@@ -69,6 +90,22 @@ trait EnforcerActor {
       }
     }
 
+  def dutyRequestHandler(
+      message: RequestDuty,
+      reasoner: ActorRef[Message],
+      contacts: Map[String, ActorRef[Message]] = Map()
+  ): Behavior[Message] =
+    Behaviors.setup { context =>
+      context.log.error(
+        "Duty requests are not yet supported"
+      )
+      Behaviors.stopped
+    }
+
+  def handleInform(proposition: Proposition): Unit = {}
+
+  def handleInformDuty(duty: Duty): Unit = {}
+
   def acceptOrSendReject(message: Message): Boolean = true
 
   def actPermitted(
@@ -81,5 +118,13 @@ trait EnforcerActor {
       contacts: Map[String, ActorRef[Message]] = Map()
   ): Unit = {}
 
-  def handleInform(predicate: Predicate): Unit = {}
+  def violatedAct(
+      act: Act,
+      contacts: Map[String, ActorRef[Message]] = Map()
+  ): Unit = {}
+
+  def violatedDuty(
+      duty: Duty,
+      contacts: Map[String, ActorRef[Message]] = Map()
+  ): Unit = {}
 }

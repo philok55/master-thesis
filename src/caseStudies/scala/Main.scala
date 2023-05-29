@@ -20,9 +20,9 @@ object CaseStudies {
     implicit val resolver: ActorRefResolver = message.resolver
     message match {
       case m: AccessControlCase => {
-        println("-----------------")
+        println("----------------------------------")
         println("Access control case study")
-        println("-----------------")
+        println("----------------------------------")
 
         val reasoner = context.spawn(
           Reasoner("src/caseStudies/eflint/accessControl.eflint"),
@@ -32,6 +32,7 @@ object CaseStudies {
           Enforcer(reasoner),
           "enforcer"
         )
+        reasoner ! Reasoner.RegisterEnforcer(enforcer)
         val database = context.spawn(Database(enforcer), "database")
         enforcer ! Enforcer.AddContact("db", database)
         val monitor =
@@ -67,13 +68,13 @@ object CaseStudies {
         tenant3 ! Tenant.FetchAgreement("agreement1")
 
         // Violation:
-        // reasoner ! InformAct(new AccessDocument(new PTenant("tenant2"), "agreement1"))
+        reasoner ! InformAct(new AccessDocument(new PTenant("tenant2"), "agreement1"))
       }
 
       case m: ExPostCase => {
-        println("-----------------")
+        println("----------------------------------")
         println("Ex-post enforcement case study")
-        println("-----------------")
+        println("----------------------------------")
       }
     }
     Thread.sleep(5000)

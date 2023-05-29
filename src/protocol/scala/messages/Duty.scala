@@ -7,5 +7,5 @@ final case class Duty(
     name: String,
     holder: ActorRef[Message],
     claimant: ActorRef[Message],
-    relatedTo: List[Predicate]
+    relatedTo: List[Proposition]
 )

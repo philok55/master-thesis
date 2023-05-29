@@ -3,23 +3,25 @@ package protocol
 object EflintAdapter {
   def apply(message: Message): String = {
     message match {
-      case Inform(predicate)  => predicateToEflint(predicate)
-      case InformAct(act)     => actToEflint(act)
-      case InformEvent(event) => eventToEflint(event)
-      case Request(predicate, replyTo) =>
-        predicateToEflint(predicate, request = true)
+      case Inform(proposition) => propositionToEflint(proposition)
+      case InformAct(act)      => actToEflint(act)
+      case InformEvent(event)  => eventToEflint(event)
+      case Request(proposition, replyTo) =>
+        propositionToEflint(proposition, request = true)
       case RequestAct(act, replyTo) => actToEflint(act, request = true)
-      case _                        => "invalid"
+      case _ =>
+        println("ERROR: eFLINTAdapter called with invalid message")
+        ""
     }
   }
 
-  def predicateToEflint(
-      predicate: Predicate,
+  def propositionToEflint(
+      proposition: Proposition,
       nested: Boolean = false,
       request: Boolean = false
   ): String = {
-    predicate match {
-      case Predicate(name, instance, state) => {
+    proposition match {
+      case Proposition(name, instance, state) => {
         val modifier = state match {
           case True    => "+"
           case False   => "-"
@@ -29,8 +31,11 @@ object EflintAdapter {
           .map {
             case PString(value) => s""""$value""""
             case PInt(value)    => value.toString
-            case Predicate(name, instance, state) =>
-              predicateToEflint(Predicate(name, instance, state), nested = true)
+            case Proposition(name, instance, state) =>
+              propositionToEflint(
+                Proposition(name, instance, state),
+                nested = true
+              )
           }
           .mkString(", ")
 
@@ -47,9 +52,9 @@ object EflintAdapter {
   def actToEflint(act: Act, request: Boolean = false): String = {
     act match {
       case Act(name, actor, recipient, related_to, _) => {
-        val actorString = predicateToEflint(actor, nested = true)
+        val actorString = propositionToEflint(actor, nested = true)
         val relatedToString = related_to
-          .map(predicateToEflint(_, nested = true))
+          .map(propositionToEflint(_, nested = true))
           .mkString(", ")
         val result =
           if (recipient == null) {
@@ -59,7 +64,7 @@ object EflintAdapter {
               s"$name($actorString, $relatedToString)"
             }
           } else {
-            val recipientString = predicateToEflint(recipient, nested = true)
+            val recipientString = propositionToEflint(recipient, nested = true)
             if (relatedToString == "") {
               s"$name($actorString, $recipientString)"
             } else {
