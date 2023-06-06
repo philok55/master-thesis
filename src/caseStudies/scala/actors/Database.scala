@@ -30,7 +30,7 @@ object Database extends ApplicationActor {
 
   final case class GetAgreement(
       documentId: String,
-      requester: PTenant
+      requester: ActorRef[Message]
   ) extends ApplicationMessage
 
   final case class AgreementFetched(document: Document)
@@ -62,8 +62,7 @@ object Database extends ApplicationActor {
       }
       case m: GetAgreement => {
         val agreement = KnowledgeBase.agreements(m.documentId)
-        val recipient = KnowledgeBase.tenants(m.requester.name)._2
-        recipient ! AgreementFetched(agreement._1)
+        m.requester ! AgreementFetched(agreement._1)
         Behaviors.same
       }
       case m: IndexAgreement => {
@@ -77,7 +76,7 @@ object Database extends ApplicationActor {
         val owner = KnowledgeBase.tenants(tenantName)._1
         val pAgreement = new PRentalAgreement(m.documentId, tenantName)
         val pCurrRentPrice = new PRentPrice(pAgreement, agreement._3)
-        RentalAgreementIndexed(owner.path.name, pCurrRentPrice, m.percentage)()
+        RentalAgreementIndexed(owner, pCurrRentPrice, m.percentage)()
         Behaviors.same
       }
     }

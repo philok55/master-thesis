@@ -31,9 +31,9 @@ object Monitor extends MonitorActor {
         reasoner ! Inform(p)
       }
       case event: RentalAgreementIndexed => {
-        val pOwner = new POwner(event.owner)
         val a = new IndexAgreement(
-          pOwner,
+          event.actor,
+          new POwner(event.actor.path.name),
           event.current,
           event.percentage
         )

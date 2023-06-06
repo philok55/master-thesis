@@ -51,20 +51,20 @@ object EflintAdapter {
 
   def actToEflint(act: Act, request: Boolean = false): String = {
     act match {
-      case Act(name, actor, recipient, related_to, _) => {
-        val actorString = propositionToEflint(actor, nested = true)
+      case Act(name, _, pActor, _, pRecipient, related_to, _) => {
+        val actorString = propositionToEflint(pActor, nested = true)
         val relatedToString = related_to
           .map(propositionToEflint(_, nested = true))
           .mkString(", ")
         val result =
-          if (recipient == null) {
+          if (pRecipient == null) {
             if (relatedToString == "") {
               s"$name($actorString)"
             } else {
               s"$name($actorString, $relatedToString)"
             }
           } else {
-            val recipientString = propositionToEflint(recipient, nested = true)
+            val recipientString = propositionToEflint(pRecipient, nested = true)
             if (relatedToString == "") {
               s"$name($actorString, $recipientString)"
             } else {

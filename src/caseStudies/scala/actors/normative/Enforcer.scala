@@ -35,7 +35,7 @@ object Enforcer extends EnforcerActor {
 
   override def acceptOrSendReject(message: Message): Boolean = message match {
     case m: RequestAct => {
-      val tenantName = m.act.actor.instance(0) match {
+      val tenantName = m.act.pActor.instance(0) match {
         case PString(name) => name
         case _             => ""
       }
@@ -79,19 +79,18 @@ object Enforcer extends EnforcerActor {
       act: Act,
       contacts: Map[String, ActorRef[Message]] = Map()
   ): Unit = {
-    // TODO: act.actor needs to be actorref
     println(s"Enforcer: act violated. Sending violation report to ${act.actor}")
-    // act match {
-    //   case Act("index-agreement", _, _, _, _) => {
-    //     act.actor ! Owner.DisplayViolation(
-    //       s"Indexing of agreement was against the rules. Please reconsider."
-    //     )
-    //   }
-    //   case _ => {
-    //     act.actor ! Owner.DisplayViolation(
-    //       s"Act ${act.name} caused violation"
-    //     )
-    //   }
-    // }
+    act match {
+      case Act("index-agreement", actor, _, _, _, _, _) => {
+        actor ! Owner.DisplayViolation(
+          s"Indexing of agreement was against the rules. Please reconsider."
+        )
+      }
+      case _ => {
+        act.actor ! Owner.DisplayViolation(
+          s"Act ${act.name} caused violation"
+        )
+      }
+    }
   }
 }

@@ -20,7 +20,7 @@ object Tenant extends ApplicationActor {
   ): Behavior[Message] =
     message match {
       case m: FetchAgreement => {
-        val act = new AccessDocument(new PTenant(self.path.name), m.documentId)
+        val act = new AccessDocument(self, new PTenant(self.path.name), m.documentId)
         sendQuery(Left(act), enforcer, self)
         Behaviors.same
       }
