@@ -32,3 +32,14 @@ final class IndexAgreement(
         )
       )
     ) {}
+
+final class MakeRentPayment(
+    override val actor: ActorRef[Message],
+    override val pActor: PTenant,
+    val payment: PRentPayment
+) extends Act(
+      "make-rent-payment",
+      actor,
+      pActor,
+      relatedTo = List(payment)
+    ) {}

@@ -9,6 +9,10 @@ Fact percentage Identified by Int
 Fact rental-agreement Identified by tenant * document
 Fact rent-price Identified by rental-agreement * price
 
+Fact deadline
+Fact rent-payment Identified by tenant * price * deadline
+Fact rent-due Identified by rent-payment
+
 // Access control policy for tenant document access
 Act access-document
   Actor tenant
@@ -23,7 +27,23 @@ Act index-agreement
   Actor owner
   Related to rent-price1, percentage
   Holds when rent-price1 && percentage <= 4
-  Conditioned by rent-price1 && percentage <= 4
+  Conditioned by percentage <= 4
   Terminates rent-price1
   Creates rent-price(rent-price1.rental-agreement, rent-price1.price * (1 + percentage / 100))
+
+// Duty to pay rent
+Duty pay-rent
+  Holder tenant
+  Claimant owner
+  Related to rent-payment
+  Holds when rent-payment
+  Violated when rent-due(rent-payment)
+
+// Act of paying rent, terminates the duty
+Act make-rent-payment
+  Actor tenant
+  Recipient owner
+  Related to rent-payment
+  Holds when rent-payment
+  Terminates pay-rent
 

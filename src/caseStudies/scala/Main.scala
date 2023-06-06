@@ -16,8 +16,6 @@ object CaseStudies {
       extends Scenario
   final case class ExPostCase(resolver: ActorRefResolver) extends Scenario
 
-
-
   def apply(): Behavior[Scenario] = Behaviors.receive { (context, message) =>
     implicit val resolver: ActorRefResolver = message.resolver
     message match {
@@ -95,7 +93,7 @@ object CaseStudies {
           "owner1"
         )
         OwnerCreated("owner1")()
-        
+
         val tenant1 = context.spawn(Tenant(enforcer), "tenant1")
         owner ! Owner.CreateTenant(tenant1)
 
@@ -111,10 +109,18 @@ object CaseStudies {
 
         Thread.sleep(1000)
 
+        // ACTION VIOLATION
         // Allowed
         owner ! Owner.IndexAgreement("agreement1", 3)
         // Violation
         owner ! Owner.IndexAgreement("agreement1", 5)
+
+        Thread.sleep(1000)
+
+        // DUTY VIOLATION
+        owner ! Owner.SetPaymentDeadline("tenant1", 1200, "01-07-2023")
+        // Causes violation, tenant is sent a reminder
+        owner ! Owner.MarkRentAsDue("tenant1", 1200, "01-07-2023")
       }
     }
     Thread.sleep(5000)

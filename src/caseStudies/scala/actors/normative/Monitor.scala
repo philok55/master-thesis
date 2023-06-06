@@ -39,6 +39,22 @@ object Monitor extends MonitorActor {
         )
         reasoner ! InformAct(a)
       }
+      case event: RentPaymentCreated => {
+        val p = new PRentPayment(
+          new PTenant(event.tenantName),
+          event.price,
+          event.deadline
+        )
+        reasoner ! Inform(p)
+      }
+      case event: RentPaymentDue => {
+        val payment = new PRentPayment(
+          new PTenant(event.tenantName),
+          event.price,
+          event.deadline
+        )
+        reasoner ! Inform(new PRentDue(payment))
+      }
     }
   }
 }

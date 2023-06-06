@@ -25,7 +25,19 @@ object Owner extends ApplicationActor {
       id: String,
       percentage: Int
   ) extends ApplicationMessage
-  
+
+  final case class SetPaymentDeadline(
+      tenantName: String,
+      price: Int,
+      deadline: String
+  ) extends ApplicationMessage
+
+  final case class MarkRentAsDue(
+      tenantName: String,
+      price: Int,
+      deadline: String
+  ) extends ApplicationMessage
+
   final case class DisplayViolation(message: String) extends ApplicationMessage
 
   override def handleApplicationMessage(
@@ -48,10 +60,17 @@ object Owner extends ApplicationActor {
         contacts("db") ! Database.IndexAgreement(m.id, m.percentage)
         Behaviors.same
       }
+      case m: SetPaymentDeadline => {
+        RentPaymentCreated(m.tenantName, m.price, m.deadline)()
+        Behaviors.same
+      }
+      case m: MarkRentAsDue => {
+        RentPaymentDue(m.tenantName, m.price, m.deadline)()
+        Behaviors.same
+      }
       case m: DisplayViolation => {
         println(s"Owner portal displaying violation to user: ${m.message}")
         Behaviors.same
       }
     }
 }
-

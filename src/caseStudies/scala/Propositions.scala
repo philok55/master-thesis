@@ -30,3 +30,17 @@ final class PRentPrice(
       List(agreement, PInt(price)),
       state
     ) {}
+
+final class PRentPayment(
+    val tenant: PTenant,
+    val price: Int,
+    val deadline: String,
+    override val state: TruthValue = True
+) extends Proposition(
+      "rent-payment",
+      List(tenant, PInt(price), PString(deadline)),
+      state
+    ) {}
+
+final class PRentDue(val payment: PRentPayment)
+    extends Proposition("rent-due", List(payment), True) {}
