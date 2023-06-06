@@ -1,12 +1,13 @@
-// eFLINT policy for our case study
-
 Fact user
 Fact document
 
 Fact owner Identified by user
 Fact tenant Identified by user
+Fact price Identified by Int
+Fact percentage Identified by Int
 
 Fact rental-agreement Identified by tenant * document
+Fact rent-price Identified by rental-agreement * price
 
 // Access control policy for tenant document access
 Act access-document
@@ -16,4 +17,13 @@ Act access-document
     rental-agreement(tenant, document)
   Conditioned by
     rental-agreement(tenant, document)
+
+// Indexation action, capped at 4%
+Act index-agreement
+  Actor owner
+  Related to rent-price1, percentage
+  Holds when rent-price1 && percentage <= 4
+  Conditioned by rent-price1 && percentage <= 4
+  Terminates rent-price1
+  Creates rent-price(rent-price1.rental-agreement, rent-price1.price * (1 + percentage / 100))
 

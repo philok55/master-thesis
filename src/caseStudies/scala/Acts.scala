@@ -11,3 +11,20 @@ final class AccessDocument(
       actor,
       relatedTo = List(new PDocument(documentId))
     ) {}
+
+final class IndexAgreement(
+    override val actor: POwner,
+    val current: PRentPrice,
+    val percentage: Int
+) extends Act(
+      "index-agreement",
+      actor,
+      relatedTo = List(
+        current,
+        Proposition(
+          "percentage",
+          List(PInt(percentage)),
+          True
+        )
+      )
+    ) {}

@@ -10,14 +10,23 @@ import scala.collection.Map
 import protocol._
 
 object Owner extends ApplicationActor {
-  final case class CreateTenant(tenant: ActorRef[Message]) extends ApplicationMessage
+  final case class CreateTenant(tenant: ActorRef[Message])
+      extends ApplicationMessage
 
   final case class CreateAgreement(
       id: String,
       fileName: String,
       content: String,
-      tenantName: String
+      tenantName: String,
+      price: Int
   ) extends ApplicationMessage
+
+  final case class IndexAgreement(
+      id: String,
+      percentage: Int
+  ) extends ApplicationMessage
+  
+  final case class DisplayViolation(message: String) extends ApplicationMessage
 
   override def handleApplicationMessage(
       message: ApplicationMessage,
@@ -32,8 +41,17 @@ object Owner extends ApplicationActor {
       }
       case m: CreateAgreement => {
         val agreement = new Document(m.id, m.fileName, m.content)
-        contacts("db") ! Database.AddAgreement(agreement, m.tenantName)
+        contacts("db") ! Database.AddAgreement(agreement, m.tenantName, m.price)
+        Behaviors.same
+      }
+      case m: IndexAgreement => {
+        contacts("db") ! Database.IndexAgreement(m.id, m.percentage)
+        Behaviors.same
+      }
+      case m: DisplayViolation => {
+        println(s"Owner portal displaying violation to user: ${m.message}")
         Behaviors.same
       }
     }
 }
+

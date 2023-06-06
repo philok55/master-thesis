@@ -54,9 +54,11 @@ object Enforcer extends EnforcerActor {
       case tenant: PTenant => {
         KnowledgeBase.tenants = tenant.name :: KnowledgeBase.tenants
       }
-      case agreement: PRentalAgreement => {
-        KnowledgeBase.agreements = agreement :: KnowledgeBase.agreements
+      case priceObj: PRentPrice => {
+        KnowledgeBase.agreements =
+          priceObj.agreement :: KnowledgeBase.agreements
       }
+      case _ => println(s"Enforcer: unhandled proposition: ${proposition}")
     }
   }
 
@@ -67,9 +69,29 @@ object Enforcer extends EnforcerActor {
     val database = contacts("db")
     act match {
       case a: AccessDocument => {
-        println(s"Enforcer: facilitating access to ${a.documentId}")	
+        println(s"Enforcer: facilitating access to ${a.documentId}")
         database ! Database.GetAgreement(a.documentId, a.actor)
       }
     }
+  }
+
+  override def violatedAct(
+      act: Act,
+      contacts: Map[String, ActorRef[Message]] = Map()
+  ): Unit = {
+    // TODO: act.actor needs to be actorref
+    println(s"Enforcer: act violated. Sending violation report to ${act.actor}")
+    // act match {
+    //   case Act("index-agreement", _, _, _, _) => {
+    //     act.actor ! Owner.DisplayViolation(
+    //       s"Indexing of agreement was against the rules. Please reconsider."
+    //     )
+    //   }
+    //   case _ => {
+    //     act.actor ! Owner.DisplayViolation(
+    //       s"Act ${act.name} caused violation"
+    //     )
+    //   }
+    // }
   }
 }

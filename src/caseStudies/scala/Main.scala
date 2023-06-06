@@ -16,6 +16,8 @@ object CaseStudies {
       extends Scenario
   final case class ExPostCase(resolver: ActorRefResolver) extends Scenario
 
+
+
   def apply(): Behavior[Scenario] = Behaviors.receive { (context, message) =>
     implicit val resolver: ActorRefResolver = message.resolver
     message match {
@@ -40,8 +42,9 @@ object CaseStudies {
 
         val owner = context.spawn(
           Owner(enforcer, contacts = Map("db" -> database)),
-          "owner"
+          "owner1"
         )
+        OwnerCreated("owner1")()
 
         val tenant1 = context.spawn(Tenant(enforcer), "tenant1")
         val tenant2 = context.spawn(Tenant(enforcer), "tenant2")
@@ -55,7 +58,8 @@ object CaseStudies {
           id = "agreement1",
           fileName = "agreement1.pdf",
           content = "Content of agreement 1.",
-          tenantName = tenant1.path.name
+          tenantName = tenant1.path.name,
+          price = 1250
         )
 
         Thread.sleep(1000)
@@ -66,15 +70,51 @@ object CaseStudies {
         tenant2 ! Tenant.FetchAgreement("agreement1")
         // Reject (unregistered tenant, not created by owner)
         tenant3 ! Tenant.FetchAgreement("agreement1")
-
-        // Violation:
-        reasoner ! InformAct(new AccessDocument(new PTenant("tenant2"), "agreement1"))
       }
-
       case m: ExPostCase => {
         println("----------------------------------")
         println("Ex-post enforcement case study")
         println("----------------------------------")
+
+        val reasoner = context.spawn(
+          Reasoner("src/caseStudies/eflint/caseStudies.eflint"),
+          "reasoner"
+        )
+        val enforcer = context.spawn(
+          Enforcer(reasoner),
+          "enforcer"
+        )
+        reasoner ! Reasoner.RegisterEnforcer(enforcer)
+        val database = context.spawn(Database(enforcer), "database")
+        enforcer ! Enforcer.AddContact("db", database)
+        val monitor =
+          context.spawn(Monitor(reasoner, enforcer, MonitorActors), "monitor")
+
+        val owner = context.spawn(
+          Owner(enforcer, contacts = Map("db" -> database)),
+          "owner1"
+        )
+        OwnerCreated("owner1")()
+        
+        val tenant1 = context.spawn(Tenant(enforcer), "tenant1")
+        owner ! Owner.CreateTenant(tenant1)
+
+        Thread.sleep(1000)
+
+        owner ! Owner.CreateAgreement(
+          id = "agreement1",
+          fileName = "agreement1.pdf",
+          content = "Content of agreement 1.",
+          tenantName = tenant1.path.name,
+          price = 1250
+        )
+
+        Thread.sleep(1000)
+
+        // Allowed
+        owner ! Owner.IndexAgreement("agreement1", 3)
+        // Violation
+        owner ! Owner.IndexAgreement("agreement1", 5)
       }
     }
     Thread.sleep(5000)
@@ -87,5 +127,6 @@ object CaseStudiesMain extends App {
     ActorSystem(CaseStudies(), "CaseStudies")
   val resolver = ActorRefResolver(system)
 
-  system ! CaseStudies.AccessControlCase(resolver)
+  // system ! CaseStudies.AccessControlCase(resolver)
+  system ! CaseStudies.ExPostCase(resolver)
 }
