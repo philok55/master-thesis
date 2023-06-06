@@ -25,7 +25,7 @@ object CaseStudies {
         println("----------------------------------")
 
         val reasoner = context.spawn(
-          Reasoner("src/caseStudies/eflint/accessControl.eflint"),
+          Reasoner("src/caseStudies/eflint/caseStudies.eflint"),
           "reasoner"
         )
         val enforcer = context.spawn(
