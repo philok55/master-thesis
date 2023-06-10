@@ -118,8 +118,6 @@ trait ReasonerActor {
         Behaviors.receiveMessage {
           case norms.ViolatedAction(action) => {
             println(s"Reasoner received violated action: $action")
-            // TODO: better to actually parse the action instead of
-            // assuming it is the act we evaluated
             msg match {
               case m: InformAct => enf ! InformViolatedAct(m.act)
               case _ =>
@@ -131,8 +129,27 @@ trait ReasonerActor {
           }
           case norms.ViolatedDuty(duty) => {
             println(s"Reasoner received violated duty: $duty")
-            // TODO parse duty
-            // enf ! InformViolatedDuty(duty)
+            duty match {
+              case norms.DutyValue(holder, claimant, value) => {
+                (holder, claimant) match {
+                  case (Left(holder), Left(claimant)) => {
+                    val d = Duty(
+                      name = value.fact_type,
+                      holder = resolver.resolveActorRef[Message](holder),
+                      claimant = resolver.resolveActorRef[Message](claimant),
+                      relatedTo = List() // TODO: parse relatedTo somehow?
+                    )
+                    enf ! InformViolatedDuty(d)
+                  }
+                  case _ =>
+                    context.log.error("Reasoner received duty with actor refs")
+                }
+              }
+              case _ =>
+                context.log.error(
+                  "Reasoner received duty with unexpected value"
+                )
+            }
             Behaviors.same
           }
           case norms.ActiveDuty(duty) => {
@@ -142,7 +159,7 @@ trait ReasonerActor {
             Behaviors.same
           }
           case norms.ExecutedAction(action) => {
-            println(s"Reasoner received executed action: $action")
+            // No use case yet
             Behaviors.same
           }
           case response: norms.Message => {

@@ -93,4 +93,11 @@ object Enforcer extends EnforcerActor {
       }
     }
   }
+
+  override def violatedDuty(
+      duty: Duty,
+      contacts: Map[String, ActorRef[Message]] = Map()
+  ): Unit = {
+    println(s"Enforcer received violated duty: ${duty}")
+  }
 }
