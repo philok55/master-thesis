@@ -47,7 +47,7 @@ trait ApplicationActor {
       enforcer: ActorRef[Message],
       self: ActorRef[Message],
       contacts: Map[String, ActorRef[Message]] = Map()
-  ): Behavior[Message] = Behaviors.same
+  )(implicit resolver: ActorRefResolver): Behavior[Message] = Behaviors.same
 
   def actPermitted(act: Act): Unit = {}
 

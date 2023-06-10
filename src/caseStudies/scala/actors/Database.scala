@@ -14,7 +14,7 @@ object Database extends ApplicationActor {
     var tenants: Map[String, (ActorRef[Message], ActorRef[Message])] =
       Map() // (owner, tenant)
     var agreements: Map[String, (Document, String, Int)] =
-      Map() // (document, tenantName, price)
+      Map() // (document, tenantAddress, price)
   }
 
   final case class AddTenant(
@@ -24,7 +24,7 @@ object Database extends ApplicationActor {
 
   final case class AddAgreement(
       document: Document,
-      tenantName: String,
+      tenantAddress: String,
       price: Int
   ) extends ApplicationMessage
 
@@ -46,18 +46,19 @@ object Database extends ApplicationActor {
       enforcer: ActorRef[Message],
       self: ActorRef[Message],
       contacts: Map[String, ActorRef[Message]] = Map()
-  ): Behavior[Message] =
+  )(implicit resolver: ActorRefResolver): Behavior[Message] =
     message match {
       case m: AddTenant => {
+        val address = resolver.toSerializationFormat(m.tenant)
         KnowledgeBase.tenants =
-          KnowledgeBase.tenants + (m.tenant.path.name -> (m.owner, m.tenant))
-        TenantCreated(m.tenant.path.name)()
+          KnowledgeBase.tenants + (address -> (m.owner, m.tenant))
+        TenantCreated(address)()
         Behaviors.same
       }
       case m: AddAgreement => {
         KnowledgeBase.agreements =
-          KnowledgeBase.agreements + (m.document.id -> (m.document, m.tenantName, m.price))
-        RentalAgreementCreated(m.document.id, m.tenantName, m.price)()
+          KnowledgeBase.agreements + (m.document.id -> (m.document, m.tenantAddress, m.price))
+        RentalAgreementCreated(m.document.id, m.tenantAddress, m.price)()
         Behaviors.same
       }
       case m: GetAgreement => {
@@ -72,9 +73,9 @@ object Database extends ApplicationActor {
         KnowledgeBase.agreements =
           KnowledgeBase.agreements + (m.documentId -> (agreement._1, agreement._2, newPrice))
 
-        val tenantName = agreement._2
-        val owner = KnowledgeBase.tenants(tenantName)._1
-        val pAgreement = new PRentalAgreement(m.documentId, tenantName)
+        val tenantAddress = agreement._2
+        val owner = KnowledgeBase.tenants(tenantAddress)._1
+        val pAgreement = new PRentalAgreement(m.documentId, tenantAddress)
         val pCurrRentPrice = new PRentPrice(pAgreement, agreement._3)
         RentalAgreementIndexed(owner, pCurrRentPrice, m.percentage)()
         Behaviors.same

@@ -13,11 +13,11 @@ final class PDocument(val id: String, override val state: TruthValue = True)
 
 final class PRentalAgreement(
     val id: String,
-    val tenantName: String,
+    val tenantAddress: String,
     override val state: TruthValue = True
 ) extends Proposition(
       "rental-agreement",
-      List(new PTenant(tenantName), PString(id)),
+      List(new PTenant(tenantAddress), PString(id)),
       state
     ) {}
 

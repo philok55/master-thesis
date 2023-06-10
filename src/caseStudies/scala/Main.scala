@@ -42,7 +42,7 @@ object CaseStudies {
           Owner(enforcer, contacts = Map("db" -> database)),
           "owner1"
         )
-        OwnerCreated("owner1")()
+        OwnerCreated(resolver.toSerializationFormat(owner))()
 
         val tenant1 = context.spawn(Tenant(enforcer), "tenant1")
         val tenant2 = context.spawn(Tenant(enforcer), "tenant2")
@@ -56,7 +56,7 @@ object CaseStudies {
           id = "agreement1",
           fileName = "agreement1.pdf",
           content = "Content of agreement 1.",
-          tenantName = tenant1.path.name,
+          tenantAddress = resolver.toSerializationFormat(tenant1),
           price = 1250
         )
 
@@ -92,7 +92,7 @@ object CaseStudies {
           Owner(enforcer, contacts = Map("db" -> database)),
           "owner1"
         )
-        OwnerCreated("owner1")()
+        OwnerCreated(resolver.toSerializationFormat(owner))()
 
         val tenant1 = context.spawn(Tenant(enforcer), "tenant1")
         owner ! Owner.CreateTenant(tenant1)
@@ -103,7 +103,7 @@ object CaseStudies {
           id = "agreement1",
           fileName = "agreement1.pdf",
           content = "Content of agreement 1.",
-          tenantName = tenant1.path.name,
+          tenantAddress = resolver.toSerializationFormat(tenant1),
           price = 1250
         )
 
@@ -118,9 +118,17 @@ object CaseStudies {
         Thread.sleep(1000)
 
         // DUTY VIOLATION
-        owner ! Owner.SetPaymentDeadline("tenant1", 1200, "01-07-2023")
+        owner ! Owner.SetPaymentDeadline(
+          resolver.toSerializationFormat(tenant1),
+          1200,
+          "01-07-2023"
+        )
         // Causes violation, tenant is sent a reminder
-        owner ! Owner.MarkRentAsDue("tenant1", 1200, "01-07-2023")
+        owner ! Owner.MarkRentAsDue(
+          resolver.toSerializationFormat(tenant1),
+          1200,
+          "01-07-2023"
+        )
       }
     }
     Thread.sleep(5000)

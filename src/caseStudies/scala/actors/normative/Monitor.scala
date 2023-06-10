@@ -12,7 +12,7 @@ object Monitor extends MonitorActor {
       reasoner: ActorRef[Message],
       enforcer: ActorRef[Message],
       event: SystemEvent
-  ): Unit = {
+  )(implicit resolver: ActorRefResolver): Unit = {
     event match {
       case event: OwnerCreated => {
         val p = new POwner(event.name)
@@ -25,7 +25,7 @@ object Monitor extends MonitorActor {
         reasoner ! Inform(p)
       }
       case event: RentalAgreementCreated => {
-        val agr = new PRentalAgreement(event.id, event.tenantName)
+        val agr = new PRentalAgreement(event.id, event.tenantAddress)
         val p = new PRentPrice(agr, event.price)
         enforcer ! Inform(p)
         reasoner ! Inform(p)
@@ -33,7 +33,7 @@ object Monitor extends MonitorActor {
       case event: RentalAgreementIndexed => {
         val a = new IndexAgreement(
           event.actor,
-          new POwner(event.actor.path.name),
+          new POwner(resolver.toSerializationFormat(event.actor)),
           event.current,
           event.percentage
         )
@@ -41,7 +41,7 @@ object Monitor extends MonitorActor {
       }
       case event: RentPaymentCreated => {
         val p = new PRentPayment(
-          new PTenant(event.tenantName),
+          new PTenant(event.tenantAddress),
           event.price,
           event.deadline
         )
@@ -49,7 +49,7 @@ object Monitor extends MonitorActor {
       }
       case event: RentPaymentDue => {
         val payment = new PRentPayment(
-          new PTenant(event.tenantName),
+          new PTenant(event.tenantAddress),
           event.price,
           event.deadline
         )

@@ -35,11 +35,11 @@ object Enforcer extends EnforcerActor {
 
   override def acceptOrSendReject(message: Message): Boolean = message match {
     case m: RequestAct => {
-      val tenantName = m.act.pActor.instance(0) match {
+      val tenantAddress = m.act.pActor.instance(0) match {
         case PString(name) => name
         case _             => ""
       }
-      if (KnowledgeBase.tenants.contains(tenantName)) {
+      if (KnowledgeBase.tenants.contains(tenantAddress)) {
         true
       } else {
         m.replyTo ! Rejected(m.act)

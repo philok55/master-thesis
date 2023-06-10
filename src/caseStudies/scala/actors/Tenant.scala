@@ -17,15 +17,21 @@ object Tenant extends ApplicationActor {
       enforcer: ActorRef[Message],
       self: ActorRef[Message],
       contacts: Map[String, ActorRef[Message]] = Map()
-  ): Behavior[Message] =
+  )(implicit resolver: ActorRefResolver): Behavior[Message] =
     message match {
       case m: FetchAgreement => {
-        val act = new AccessDocument(self, new PTenant(self.path.name), m.documentId)
+        val act = new AccessDocument(
+          self,
+          new PTenant(resolver.toSerializationFormat(self)),
+          m.documentId
+        )
         sendQuery(Left(act), enforcer, self)
         Behaviors.same
       }
       case m: Database.AgreementFetched => {
-        println(s"Agreement received by ${self.path.name}: ${m.document.fileName}. Content: ${m.document.content}")
+        println(
+          s"Agreement received by ${self.path.name}: ${m.document.fileName}. Content: ${m.document.content}"
+        )
         Behaviors.same
       }
     }

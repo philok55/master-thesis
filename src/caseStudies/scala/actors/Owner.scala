@@ -17,7 +17,7 @@ object Owner extends ApplicationActor {
       id: String,
       fileName: String,
       content: String,
-      tenantName: String,
+      tenantAddress: String,
       price: Int
   ) extends ApplicationMessage
 
@@ -27,13 +27,13 @@ object Owner extends ApplicationActor {
   ) extends ApplicationMessage
 
   final case class SetPaymentDeadline(
-      tenantName: String,
+      tenantAddress: String,
       price: Int,
       deadline: String
   ) extends ApplicationMessage
 
   final case class MarkRentAsDue(
-      tenantName: String,
+      tenantAddress: String,
       price: Int,
       deadline: String
   ) extends ApplicationMessage
@@ -45,7 +45,7 @@ object Owner extends ApplicationActor {
       enforcer: ActorRef[Message],
       self: ActorRef[Message],
       contacts: Map[String, ActorRef[Message]] = Map()
-  ): Behavior[Message] =
+  )(implicit resolver: ActorRefResolver): Behavior[Message] =
     message match {
       case m: CreateTenant => {
         contacts("db") ! Database.AddTenant(m.tenant, self)
@@ -53,7 +53,7 @@ object Owner extends ApplicationActor {
       }
       case m: CreateAgreement => {
         val agreement = new Document(m.id, m.fileName, m.content)
-        contacts("db") ! Database.AddAgreement(agreement, m.tenantName, m.price)
+        contacts("db") ! Database.AddAgreement(agreement, m.tenantAddress, m.price)
         Behaviors.same
       }
       case m: IndexAgreement => {
@@ -61,11 +61,11 @@ object Owner extends ApplicationActor {
         Behaviors.same
       }
       case m: SetPaymentDeadline => {
-        RentPaymentCreated(m.tenantName, m.price, m.deadline)()
+        RentPaymentCreated(m.tenantAddress, m.price, m.deadline)()
         Behaviors.same
       }
       case m: MarkRentAsDue => {
-        RentPaymentDue(m.tenantName, m.price, m.deadline)()
+        RentPaymentDue(m.tenantAddress, m.price, m.deadline)()
         Behaviors.same
       }
       case m: DisplayViolation => {

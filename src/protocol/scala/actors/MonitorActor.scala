@@ -24,5 +24,5 @@ trait MonitorActor {
       reasoner: ActorRef[Message],
       enforcer: ActorRef[Message],
       event: SystemEvent
-  ): Unit
+  )(implicit resolver: ActorRefResolver): Unit
 }

@@ -118,7 +118,7 @@ trait ReasonerActor {
         Behaviors.receiveMessage {
           case norms.ViolatedAction(action) => {
             println(s"Reasoner received violated action: $action")
-            // TODO: better to actually parse the action instead of 
+            // TODO: better to actually parse the action instead of
             // assuming it is the act we evaluated
             msg match {
               case m: InformAct => enf ! InformViolatedAct(m.act)

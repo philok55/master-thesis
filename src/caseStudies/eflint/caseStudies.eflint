@@ -1,11 +1,10 @@
 Fact user
-Fact document
-
 Fact owner Identified by user
 Fact tenant Identified by user
 Fact price Identified by Int
 Fact percentage Identified by Int
 
+Fact document
 Fact rental-agreement Identified by tenant * document
 Fact rent-price Identified by rental-agreement * price
 
