@@ -21,6 +21,20 @@ object Owner extends ApplicationActor {
       price: Int
   ) extends ApplicationMessage
 
+  final case class RegisterAgreementTermination(
+      agreementId: String
+  ) extends ApplicationMessage
+
+  final case class CollectDeposit(
+      agreementId: String,
+      amount: Int
+  ) extends ApplicationMessage
+
+  final case class RefundDeposit(
+      agreementId: String,
+      amount: Int
+  ) extends ApplicationMessage
+
   final case class IndexAgreement(
       id: String,
       percentage: Int
@@ -53,7 +67,23 @@ object Owner extends ApplicationActor {
       }
       case m: CreateAgreement => {
         val agreement = new Document(m.id, m.fileName, m.content)
-        contacts("db") ! Database.AddAgreement(agreement, m.tenantAddress, m.price)
+        contacts("db") ! Database.AddAgreement(
+          agreement,
+          m.tenantAddress,
+          m.price
+        )
+        Behaviors.same
+      }
+      case m: RegisterAgreementTermination => {
+        contacts("db") ! Database.TerminateAgreement(m.agreementId)
+        Behaviors.same
+      }
+      case m: CollectDeposit => {
+        contacts("db") ! Database.RegisterDeposit(m.agreementId, m.amount)
+        Behaviors.same
+      }
+      case m: RefundDeposit => {
+        contacts("db") ! Database.RegisterDepositRefund(m.agreementId, m.amount)
         Behaviors.same
       }
       case m: IndexAgreement => {

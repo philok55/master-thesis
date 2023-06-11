@@ -26,6 +26,7 @@ object Monitor extends MonitorActor {
       }
       case event: RentalAgreementCreated => {
         val agr = new PRentalAgreement(event.id, event.tenantAddress)
+        reasoner ! Inform(agr)
         val p = new PRentPrice(agr, event.price)
         enforcer ! Inform(p)
         reasoner ! Inform(p)
@@ -54,6 +55,36 @@ object Monitor extends MonitorActor {
           event.deadline
         )
         reasoner ! Inform(new PRentDue(payment))
+      }
+      case event: AgreementTerminated => {
+        val tenantAddr = resolver.toSerializationFormat(event.tenant)
+        val agr = new PRentalAgreement(event.agreementId, tenantAddr)
+        val a = new TeminateAgreement(
+          event.tenant,
+          new PTenant(tenantAddr),
+          event.owner,
+          new POwner(resolver.toSerializationFormat(event.owner)),
+          agr
+        )
+        reasoner ! InformAct(a)
+      }
+      case event: DepositRegistered => {
+        val agr = new PRentalAgreement(event.agreementId, event.tenantAddress)
+        val p = new PDeposit(agr, event.amount)
+        reasoner ! Inform(p)
+      }
+      case event: DepositRefunded => {
+        val tenantAddr = resolver.toSerializationFormat(event.tenant)
+        val agr = new PRentalAgreement(event.agreementId, tenantAddr)
+        val deposit = new PDeposit(agr, event.amount)
+        val a = new RefundDeposit(
+          event.owner,
+          new POwner(resolver.toSerializationFormat(event.owner)),
+          event.tenant,
+          new PTenant(tenantAddr),
+          deposit
+        )
+        reasoner ! InformAct(a)
       }
     }
   }

@@ -9,4 +9,6 @@ case class RentalAgreementCreated(id: String, tenantAddress: String, price: Int)
 case class RentalAgreementIndexed(actor: ActorRef[Message], current: PRentPrice, percentage: Int) extends SystemEvent {}
 case class RentPaymentCreated(tenantAddress: String, price: Int, deadline: String) extends SystemEvent {}
 case class RentPaymentDue(tenantAddress: String, price: Int, deadline: String) extends SystemEvent {}
-case class RentPaymentMade(actor: ActorRef[Message], tenantAddress: String, price: Int, deadline: String) extends SystemEvent {}
+case class AgreementTerminated(tenant: ActorRef[Message], owner: ActorRef[Message], agreementId: String) extends SystemEvent {}
+case class DepositRegistered(agreementId: String, tenantAddress: String, amount: Int) extends SystemEvent {}
+case class DepositRefunded(owner: ActorRef[Message], tenant: ActorRef[Message], agreementId: String, amount: Int) extends SystemEvent {}

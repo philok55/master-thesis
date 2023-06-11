@@ -163,7 +163,7 @@ trait ReasonerActor {
             Behaviors.same
           }
           case response: norms.Message => {
-            println(
+            context.log.error(
               s"Reasoner received unknown message from eFLINT. Phrase: $phrase; Response: $response"
             )
             Behaviors.same

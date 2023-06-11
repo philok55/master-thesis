@@ -19,10 +19,11 @@ trait ApplicationActor {
         message match {
           case m: ApplicationMessage =>
             handleApplicationMessage(m, enforcer, context.self, contacts)
-          case m: Permitted  => actPermitted(m.act)
-          case m: Forbidden  => actForbidden(m.act)
-          case m: Rejected   => actRejected(m.act)
-          case m: InformDuty => dutyReceived(m.duty)
+          case m: Permitted            => actPermitted(m.act)
+          case m: Forbidden            => actForbidden(m.act)
+          case m: Rejected             => actRejected(m.act)
+          case m: InformDuty           => dutyReceived(m.duty)
+          case m: InformDutyTerminated => dutyTerminated(m.duty)
           case _ =>
             println(
               "Protocol violated: invalid message received in response to RequestAct"
@@ -56,4 +57,6 @@ trait ApplicationActor {
   def actRejected(act: Act): Unit = {}
 
   def dutyReceived(duty: Duty): Unit = {}
+
+  def dutyTerminated(duty: Duty): Unit = {}
 }

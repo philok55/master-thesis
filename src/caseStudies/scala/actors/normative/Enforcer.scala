@@ -98,6 +98,16 @@ object Enforcer extends EnforcerActor {
       duty: Duty,
       contacts: Map[String, ActorRef[Message]] = Map()
   ): Unit = {
-    println(s"Enforcer received violated duty: ${duty}")
+    duty match {
+      case Duty("pay-rent", actor, _, _) => {
+        println(
+          s"Enforcer received violated duty: rent was not paid by tenant ${actor.path.name}. Sending email to tenant."
+        )
+        // Actual email sending would happen here
+      }
+      case _ => {
+        println(s"Enforcer received unhandled duty violation: ${duty.name}")
+      }
+    }
   }
 }

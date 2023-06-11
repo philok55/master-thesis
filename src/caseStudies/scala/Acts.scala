@@ -33,13 +33,32 @@ final class IndexAgreement(
       )
     ) {}
 
-final class MakeRentPayment(
+final class TeminateAgreement(
     override val actor: ActorRef[Message],
     override val pActor: PTenant,
-    val payment: PRentPayment
+    override val recipient: ActorRef[Message],
+    override val pRecipient: POwner,
+    val agreement: PRentalAgreement
 ) extends Act(
-      "make-rent-payment",
+      "terminate-agreement",
       actor,
       pActor,
-      relatedTo = List(payment)
-    ) {}
+      recipient,
+      pRecipient,
+      relatedTo = List(agreement)
+    )
+
+final class RefundDeposit(
+    override val actor: ActorRef[Message],
+    override val pActor: POwner,
+    override val recipient: ActorRef[Message],
+    override val pRecipient: PTenant,
+    val deposit: PDeposit
+) extends Act(
+      "refund",
+      actor,
+      pActor,
+      recipient,
+      pRecipient,
+      relatedTo = List(deposit)
+    )
