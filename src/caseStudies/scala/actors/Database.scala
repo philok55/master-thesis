@@ -25,7 +25,8 @@ object Database extends ApplicationActor {
   final case class AddAgreement(
       document: Document,
       tenantAddress: String,
-      price: Int
+      price: Int,
+      social: Boolean = false
   ) extends ApplicationMessage
 
   final case class GetAgreement(
@@ -67,7 +68,7 @@ object Database extends ApplicationActor {
       case m: AddAgreement => {
         KnowledgeBase.agreements =
           KnowledgeBase.agreements + (m.document.id -> (m.document, m.tenantAddress, m.price))
-        RentalAgreementCreated(m.document.id, m.tenantAddress, m.price)()
+        RentalAgreementCreated(m.document.id, m.tenantAddress, m.price, m.social)()
         Behaviors.same
       }
       case m: GetAgreement => {

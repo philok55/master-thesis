@@ -36,15 +36,17 @@ object Tenant extends ApplicationActor {
       }
     }
 
-  override def actPermitted(act: Act): Unit = act match {
-    case a: AccessDocument =>
-      println(s"Tenant: access request to ${a.documentId} permitted")
-  }
+  override def actPermitted(act: Act, enforced: Boolean = false): Unit =
+    act match {
+      case a: AccessDocument =>
+        println(s"Tenant: access request to ${a.documentId} permitted")
+    }
 
-  override def actForbidden(act: Act): Unit = act match {
-    case a: AccessDocument =>
-      println(s"Tenant: access request to ${a.documentId} forbidden")
-  }
+  override def actForbidden(act: Act, enforced: Boolean = false): Unit =
+    act match {
+      case a: AccessDocument =>
+        println(s"Tenant: access request to ${a.documentId} forbidden")
+    }
 
   override def actRejected(act: Act): Unit = act match {
     case a: AccessDocument =>

@@ -5,12 +5,9 @@ import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorRefResolver
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl._
-import scala.collection.Set
 import norms.NormActor
 
 trait ReasonerActor {
-  protected def blockedActions = Set[String]()
-
   final case class RegisterEnforcer(enforcer: ActorRef[Message]) extends Message
 
   def apply(
@@ -75,10 +72,34 @@ trait ReasonerActor {
             println(
               s"Reasoner received response. Query: $phrase; Response: $response"
             )
+            // The Java server doesn't handle open types yet, but consistently
+            // throws NullPointerExceptions when it evaluates an unset open 
+            // type instance. We can use this to detect unknown propositions 
+            // for simple cases for now.
             msg match {
               case m: RequestAct => {
-                if (response.success) m.replyTo ! Permit(m.act)
-                else m.replyTo ! Forbid(m.act)
+                if (response.success) m.replyTo ! Permitted(m.act)
+                else if (response.reason == "java.lang.NullPointerException") {
+                  // TODO: handle information fetch
+                } else m.replyTo ! Forbidden(m.act)
+              }
+              case m: Request => {
+                if (response.success) m.replyTo ! Inform(m.proposition)
+                else if (response.reason == "java.lang.NullPointerException") {
+                  val np = Proposition(
+                    identifier = m.proposition.identifier,
+                    instance = m.proposition.instance,
+                    state = Unknown,
+                  )
+                  m.replyTo ! Inform(np)
+                } else {
+                  val np = Proposition(
+                    identifier = m.proposition.identifier,
+                    instance = m.proposition.instance,
+                    state = False,
+                  )
+                  m.replyTo ! Inform(np)
+                }
               }
               case _ => println("NotImplementedError")
             }

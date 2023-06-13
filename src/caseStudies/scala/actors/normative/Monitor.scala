@@ -16,7 +16,6 @@ object Monitor extends MonitorActor {
     event match {
       case event: OwnerCreated => {
         val p = new POwner(event.name)
-        enforcer ! Inform(p)
         reasoner ! Inform(p)
       }
       case event: TenantCreated => {
@@ -28,8 +27,11 @@ object Monitor extends MonitorActor {
         val agr = new PRentalAgreement(event.id, event.tenantAddress)
         reasoner ! Inform(agr)
         val p = new PRentPrice(agr, event.price)
-        enforcer ! Inform(p)
         reasoner ! Inform(p)
+        if (event.social) {
+          val social = new PSocialAgreement(agr)
+          reasoner ! Inform(social)
+        }
       }
       case event: RentalAgreementIndexed => {
         val a = new IndexAgreement(

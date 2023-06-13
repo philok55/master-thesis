@@ -20,7 +20,9 @@ trait ApplicationActor {
           case m: ApplicationMessage =>
             handleApplicationMessage(m, enforcer, context.self, contacts)
           case m: Permitted            => actPermitted(m.act)
+          case m: Permit               => actPermitted(m.act, true)
           case m: Forbidden            => actForbidden(m.act)
+          case m: Forbid               => actForbidden(m.act, true)
           case m: Rejected             => actRejected(m.act)
           case m: InformDuty           => dutyReceived(m.duty)
           case m: InformDutyTerminated => dutyTerminated(m.duty)
@@ -50,9 +52,9 @@ trait ApplicationActor {
       contacts: Map[String, ActorRef[Message]] = Map()
   )(implicit resolver: ActorRefResolver): Behavior[Message] = Behaviors.same
 
-  def actPermitted(act: Act): Unit = {}
+  def actPermitted(act: Act, enforced: Boolean = false): Unit = {}
 
-  def actForbidden(act: Act): Unit = {}
+  def actForbidden(act: Act, enforced: Boolean = false): Unit = {}
 
   def actRejected(act: Act): Unit = {}
 

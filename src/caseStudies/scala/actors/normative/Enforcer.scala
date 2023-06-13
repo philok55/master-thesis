@@ -5,14 +5,16 @@ import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorRefResolver
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl._
+import scala.collection.Set
 import scala.collection.Map
 
 import protocol._
 
 object Enforcer extends EnforcerActor {
+  override def blockedActions = Set("access-document")
+
   object KnowledgeBase {
     var tenants: List[String] = List()
-    var agreements: List[PRentalAgreement] = List()
   }
 
   def apply(
@@ -53,10 +55,6 @@ object Enforcer extends EnforcerActor {
     proposition match {
       case tenant: PTenant => {
         KnowledgeBase.tenants = tenant.name :: KnowledgeBase.tenants
-      }
-      case priceObj: PRentPrice => {
-        KnowledgeBase.agreements =
-          priceObj.agreement :: KnowledgeBase.agreements
       }
       case _ => println(s"Enforcer: unhandled proposition: ${proposition}")
     }

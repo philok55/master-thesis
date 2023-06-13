@@ -198,6 +198,28 @@ object CaseStudies {
         val enforcer = setup(0)
         val owner = setup(1)
         val database = setup(2)
+
+        val taxAuthority = context.spawn(TaxAuthority(), "taxAuth")
+        val tenant1 = context.spawn(
+          Tenant(enforcer, contacts = Map("owner" -> owner)),
+          "tenant1"
+        )
+
+        Thread.sleep(1000)
+
+        // Register tenant income (would happen from outside system)
+        taxAuthority ! TaxAuthority.AddObject(
+          s"income-${resolver.toSerializationFormat(tenant1)}",
+          58000
+        )
+
+        Thread.sleep(1000)
+
+        taxAuthority ! Request(
+          new PIncome(new PTenant(resolver.toSerializationFormat(tenant1)), 0),
+          tenant1
+        )
+        // TODO: go through reasoner for request
       }
     }
     Thread.sleep(5000)
@@ -215,7 +237,7 @@ object CaseStudiesMain extends App {
 
   // system ! CaseStudies.AccessControlCase(resolver)
   // system ! CaseStudies.ExPostCase(resolver)
-  system ! CaseStudies.DutyMonitoringCase(resolver)
+  // system ! CaseStudies.DutyMonitoringCase(resolver)
   // system ! CaseStudies.QueriesCase(resolver)
-  // system ! CaseStudies.InformationFetchCase(resolver)
+  system ! CaseStudies.InformationFetchCase(resolver)
 }

@@ -7,12 +7,15 @@ Fact percentage Identified by Int
 Fact document
 Fact rental-agreement Identified by tenant * document
 Fact rent-price Identified by rental-agreement * price
+Fact is-social-housing Identified by rental-agreement
 
 Fact deposit Identified by rental-agreement * price
 
 Fact deadline
 Fact rent-payment Identified by tenant * price * deadline
 Fact rent-due Identified by rent-payment
+
+Open Fact yearly-income Identified by tenant * price
 
 // Access control policy for tenant document access
 Act access-document
@@ -23,12 +26,17 @@ Act access-document
   Conditioned by
     rental-agreement(tenant, document)
 
-// Indexation action, capped at 4%
+// Indexation action
 Act index-agreement
   Actor owner
   Related to rent-price1, percentage
-  Holds when rent-price1 && percentage <= 4
-  Conditioned by percentage <= 4
+  Holds when rent-price1
+  Conditioned by
+        percentage <= 2 
+    || (percentage <= 3 
+        && (Exists yearly-income : yearly-income.tenant == rent-price1.rental-agreement.tenant 
+                                && yearly-income.price > 45000)) 
+    || (percentage <= 4 && !is-social-housing(rent-price1.rental-agreement))
   Terminates rent-price1
   Creates rent-price(rent-price1.rental-agreement, rent-price1.price * (1 + percentage / 100))
 

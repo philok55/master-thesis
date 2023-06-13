@@ -5,10 +5,13 @@ import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorRefResolver
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl._
+import scala.collection.Set
 import java.time.LocalDateTime
 import scala.collection.Map
 
 trait EnforcerActor {
+  def blockedActions = Set[String]()
+
   final case class AddContact(name: String, contact: ActorRef[Message])
       extends Message
 
@@ -71,13 +74,19 @@ trait EnforcerActor {
       reasoner ! RequestAct(message.act, context.self)
 
       Behaviors.receiveMessage {
-        case m: Permit => {
-          message.replyTo ! Permitted(message.act)
+        case m: Permitted => {
+          if (blockedActions contains message.act.name)
+            message.replyTo ! Permit(message.act)
+          else
+            message.replyTo ! Permitted(message.act)
           actPermitted(message.act, contacts)
           Behaviors.stopped
         }
-        case m: Forbid => {
-          message.replyTo ! Forbidden(message.act)
+        case m: Forbidden => {
+          if (blockedActions contains message.act.name)
+            message.replyTo ! Forbid(message.act)
+          else
+            message.replyTo ! Forbidden(message.act)
           actForbidden(message.act, contacts)
           Behaviors.stopped
         }

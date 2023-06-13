@@ -18,7 +18,8 @@ object Owner extends ApplicationActor {
       fileName: String,
       content: String,
       tenantAddress: String,
-      price: Int
+      price: Int,
+      social: Boolean = false
   ) extends ApplicationMessage
 
   final case class RegisterAgreementTermination(
@@ -70,7 +71,8 @@ object Owner extends ApplicationActor {
         contacts("db") ! Database.AddAgreement(
           agreement,
           m.tenantAddress,
-          m.price
+          m.price,
+          m.social
         )
         Behaviors.same
       }

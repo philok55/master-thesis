@@ -21,6 +21,15 @@ final class PRentalAgreement(
       state
     ) {}
 
+final class PSocialAgreement(
+    val agreement: PRentalAgreement,
+    override val state: TruthValue = True
+) extends Proposition(
+      "is-social-housing",
+      List(agreement),
+      state
+    ) {}
+
 final class PRentPrice(
     val agreement: PRentalAgreement,
     val price: Int,
@@ -53,3 +62,8 @@ final class PDeposit(
     override val state: TruthValue = True
 ) extends Proposition("deposit", List(agreement, PInt(price)), state) {}
 
+final class PIncome(
+    val tenant: PTenant,
+    val income: Int,
+    override val state: TruthValue = True
+) extends Proposition("yearly-income", List(tenant, PInt(income)), state) {}
