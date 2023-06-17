@@ -15,7 +15,7 @@ Fact deadline
 Fact rent-payment Identified by tenant * price * deadline
 Fact rent-due Identified by rent-payment
 
-Open Fact yearly-income Identified by tenant * price
+Fact yearly-income Identified by tenant * price
 
 // Access control policy for tenant document access
 Act access-document

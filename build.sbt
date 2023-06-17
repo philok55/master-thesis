@@ -13,7 +13,7 @@ lazy val AkkaVersion = "2.6.19"
 lazy val root = (project in file("."))
   .settings(
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.2",
-    libraryDependencies += "eflint" %% "java-server" % "0.1.10" ,
+    libraryDependencies += "eflint" %% "java-server" % "0.1.11" ,
     libraryDependencies += "eflint" %% "scala-server" % "0.1.10" ,
     libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
   )
