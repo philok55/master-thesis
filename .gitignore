@@ -11,3 +11,6 @@ src/POC/
 .metals/
 .vscode/
 .scalafmt.conf
+
+java-diff.txt
+versions.txt

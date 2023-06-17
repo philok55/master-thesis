@@ -73,8 +73,8 @@ trait ReasonerActor {
               s"Reasoner received response. Query: $phrase; Response: $response"
             )
             // The Java server doesn't handle open types yet, but consistently
-            // throws NullPointerExceptions when it evaluates an unset open 
-            // type instance. We can use this to detect unknown propositions 
+            // throws NullPointerExceptions when it evaluates an unset open
+            // type instance. We can use this to detect unknown propositions
             // for simple cases for now.
             msg match {
               case m: RequestAct => {
@@ -89,14 +89,14 @@ trait ReasonerActor {
                   val np = Proposition(
                     identifier = m.proposition.identifier,
                     instance = m.proposition.instance,
-                    state = Unknown,
+                    state = Unknown
                   )
                   m.replyTo ! Inform(np)
                 } else {
                   val np = Proposition(
                     identifier = m.proposition.identifier,
                     instance = m.proposition.instance,
-                    state = False,
+                    state = False
                   )
                   m.replyTo ! Inform(np)
                 }
@@ -150,33 +150,29 @@ trait ReasonerActor {
           }
           case norms.ViolatedDuty(duty) => {
             println(s"Reasoner received violated duty: $duty")
-            duty match {
-              case norms.DutyValue(holder, claimant, value) => {
-                (holder, claimant) match {
-                  case (Left(holder), Left(claimant)) => {
-                    val d = Duty(
-                      name = value.fact_type,
-                      holder = resolver.resolveActorRef[Message](holder),
-                      claimant = resolver.resolveActorRef[Message](claimant),
-                      relatedTo = List() // TODO: parse relatedTo somehow?
-                    )
-                    enf ! InformViolatedDuty(d)
-                  }
-                  case _ =>
-                    context.log.error("Reasoner received duty with actor refs")
-                }
-              }
-              case _ =>
-                context.log.error(
-                  "Reasoner received duty with unexpected value"
-                )
+            val d = parseDuty(duty)
+            d match {
+              case Some(d) => enf ! InformViolatedDuty(d)
+              case None    => {}
             }
             Behaviors.same
           }
           case norms.ActiveDuty(duty) => {
             println(s"Reasoner received active duty: $duty")
-            // TODO parse duty
-            // enf ! InformDuty(duty)
+            val d = parseDuty(duty)
+            d match {
+              case Some(d) => enf ! InformDuty(d)
+              case None    => {}
+            }
+            Behaviors.same
+          }
+          case norms.TerminatedDuty(duty) => {
+            println(s"Reasoner received terminated duty: $duty")
+            val d = parseDuty(duty)
+            d match {
+              case Some(d) => enf ! InformDutyTerminated(d)
+              case None    => {}
+            }
             Behaviors.same
           }
           case norms.ExecutedAction(action) => {
@@ -190,6 +186,34 @@ trait ReasonerActor {
             Behaviors.same
           }
         }
+    }
+  }
+
+  def parseDuty(duty: norms.Duty)(implicit
+      resolver: ActorRefResolver
+  ): Option[Duty] = {
+    duty match {
+      case norms.DutyValue(holder, claimant, value) => {
+        (holder, claimant) match {
+          case (Left(holder), Left(claimant)) => {
+            val d = Duty(
+              name = value.fact_type,
+              holder = resolver.resolveActorRef[Message](holder),
+              claimant = resolver.resolveActorRef[Message](claimant),
+              relatedTo = List() // TODO: parse relatedTo
+            )
+            Some(d)
+          }
+          case _ => {
+            println("Reasoner received duty with actor refs")
+            None
+          }
+        }
+      }
+      case _ => {
+        println("Reasoner received duty with unexpected value")
+        None
+      }
     }
   }
 }

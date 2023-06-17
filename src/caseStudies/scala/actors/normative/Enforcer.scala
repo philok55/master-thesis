@@ -59,6 +59,14 @@ object Enforcer extends EnforcerActor {
       case _ => println(s"Enforcer: unhandled proposition: ${proposition}")
     }
   }
+  
+  override def handleInformDuty(duty: Duty): Unit = {
+    println(s"Enforcer: received newly active duty: ${duty.name}")
+  }
+  
+  override def handleTerminatedDuty(duty: Duty): Unit = {
+    println(s"Enforcer: received terminated duty: ${duty.name}")
+  }
 
   override def actPermitted(
       act: Act,
@@ -104,7 +112,7 @@ object Enforcer extends EnforcerActor {
         // Actual email sending would happen here
       }
       case _ => {
-        println(s"Enforcer received unhandled duty violation: ${duty.name}")
+        println(s"Enforcer received unknown duty violation: ${duty.name}")
       }
     }
   }

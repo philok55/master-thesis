@@ -32,6 +32,10 @@ trait EnforcerActor {
           handleInformDuty(m.duty)
           Behaviors.same
         }
+        case m: InformDutyTerminated => {
+          handleTerminatedDuty(m.duty)
+          Behaviors.same
+        }
         case m: RequestAct => {
           if (acceptOrSendReject(message)) {
             context.spawn(
@@ -114,6 +118,8 @@ trait EnforcerActor {
   def handleInform(proposition: Proposition): Unit = {}
 
   def handleInformDuty(duty: Duty): Unit = {}
+
+  def handleTerminatedDuty(duty: Duty): Unit = {}
 
   def acceptOrSendReject(message: Message): Boolean = true
 

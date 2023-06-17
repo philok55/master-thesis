@@ -235,9 +235,9 @@ object CaseStudiesMain extends App {
   // NOTE: currently only one case can be run at a time.
   // Uncomment the one that should be run.
 
-  system ! CaseStudies.AccessControlCase(resolver)
+  // system ! CaseStudies.AccessControlCase(resolver)
   // system ! CaseStudies.ExPostCase(resolver)
-  // system ! CaseStudies.DutyMonitoringCase(resolver)
+  system ! CaseStudies.DutyMonitoringCase(resolver)
   // system ! CaseStudies.QueriesCase(resolver)
   // system ! CaseStudies.InformationFetchCase(resolver)
 }
