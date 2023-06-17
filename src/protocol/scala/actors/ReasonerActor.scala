@@ -72,27 +72,14 @@ trait ReasonerActor {
             println(
               s"Reasoner received response. Query: $phrase; Response: $response"
             )
-            // The Java server doesn't handle open types yet, but consistently
-            // throws NullPointerExceptions when it evaluates an unset open
-            // type instance. We can use this to detect unknown propositions
-            // for simple cases for now.
             msg match {
               case m: RequestAct => {
                 if (response.success) m.replyTo ! Permitted(m.act)
-                else if (response.reason == "java.lang.NullPointerException") {
-                  // TODO: handle information fetch
-                } else m.replyTo ! Forbidden(m.act)
+                else m.replyTo ! Forbidden(m.act)
               }
               case m: Request => {
                 if (response.success) m.replyTo ! Inform(m.proposition)
-                else if (response.reason == "java.lang.NullPointerException") {
-                  val np = Proposition(
-                    identifier = m.proposition.identifier,
-                    instance = m.proposition.instance,
-                    state = Unknown
-                  )
-                  m.replyTo ! Inform(np)
-                } else {
+                else {
                   val np = Proposition(
                     identifier = m.proposition.identifier,
                     instance = m.proposition.instance,
@@ -104,6 +91,12 @@ trait ReasonerActor {
               case _ => println("NotImplementedError")
             }
             Behaviors.stopped
+          }
+          case response: norms.NormActor.QueryInputRequired => {
+            println(
+              s"Reasoner received input required. Query: $phrase; Response: $response"
+            )
+            Behaviors.same
           }
           case response: norms.Message => {
             println(
@@ -177,6 +170,12 @@ trait ReasonerActor {
           }
           case norms.ExecutedAction(action) => {
             // No use case yet
+            Behaviors.same
+          }
+          case response: norms.DecisionInputRequired => {
+            println(
+              s"Reasoner received input required. Phrase: $phrase; Response: $response"
+            )
             Behaviors.same
           }
           case response: norms.Message => {
