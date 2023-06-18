@@ -15,6 +15,28 @@ object EflintAdapter {
     }
   }
 
+  def propToEflintSimple(
+      proposition: Proposition,
+      nested: Boolean = false
+  ): String = {
+    proposition match {
+      case Proposition(name, instance, state) => {
+        val instanceString = instance
+          .map {
+            case PString(value) => value
+            case PInt(value)    => value.toString
+            case Proposition(name, instance, state) =>
+              propToEflintSimple(
+                Proposition(name, instance, state),
+                nested = true
+              )
+          }
+          .mkString(", ")
+        s"$name($instanceString)"
+      }
+    }
+  }
+
   def propositionToEflint(
       proposition: Proposition,
       nested: Boolean = false,

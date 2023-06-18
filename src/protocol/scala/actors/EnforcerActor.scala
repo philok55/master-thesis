@@ -109,10 +109,20 @@ trait EnforcerActor {
       contacts: Map[String, ActorRef[Message]] = Map()
   ): Behavior[Message] =
     Behaviors.setup { context =>
-      context.log.error(
-        "Duty requests are not yet supported"
-      )
-      Behaviors.stopped
+      reasoner ! RequestDuty(message.duty, context.self)
+
+      Behaviors.receiveMessage {
+        case m: InformDuty => {
+          println(s"Enforcer received duty: ${m.duty}")
+          Behaviors.same
+        }
+        case _ => {
+          println(
+            "Protocol violated: invalid message received in response to RequestDuty"
+          )
+          Behaviors.stopped
+        }
+      }
     }
 
   def handleInform(proposition: Proposition): Unit = {}

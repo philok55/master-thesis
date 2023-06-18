@@ -48,7 +48,7 @@ object Enforcer extends EnforcerActor {
         false
       }
     }
-    case _ => false
+    case _ => true
   }
 
   override def handleInform(proposition: Proposition): Unit = {
@@ -105,7 +105,7 @@ object Enforcer extends EnforcerActor {
       contacts: Map[String, ActorRef[Message]] = Map()
   ): Unit = {
     duty match {
-      case Duty("pay-rent", actor, _, _) => {
+      case Duty("pay-rent", Some(actor), _, _, _, _) => {
         println(
           s"Enforcer received violated duty: rent was not paid by tenant ${actor.path.name}. Sending email to tenant."
         )

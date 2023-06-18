@@ -192,6 +192,31 @@ object CaseStudies {
         val enforcer = setup(1)
         val owner = setup(2)
         val database = setup(3)
+
+        val tenant1 = context.spawn(
+          Tenant(enforcer, contacts = Map("owner" -> owner)),
+          "tenant1"
+        )
+        owner ! Owner.CreateTenant(tenant1)
+
+        Thread.sleep(1000)
+
+        owner ! Owner.CreateAgreement(
+          id = "agreement1",
+          fileName = "agreement1.pdf",
+          content = "Content of agreement 1.",
+          tenantAddress = resolver.toSerializationFormat(tenant1),
+          price = 1250
+        )
+        Thread.sleep(1000)
+        // Deposit collected after agreement started
+        owner ! Owner.CollectDeposit("agreement1", 2500)
+        Thread.sleep(1000)
+        // Creates duty to pay back deposit
+        owner ! Owner.RegisterAgreementTermination("agreement1")
+
+        // Owner queries for duties (e.g. when loading the UI)
+        owner ! Owner.QueryDuties()
       }
       case m: InformationFetchCase => {
         println("----------------------------------")
@@ -252,6 +277,6 @@ object CaseStudiesMain extends App {
   // system ! CaseStudies.AccessControlCase(resolver)
   // system ! CaseStudies.ExPostCase(resolver)
   // system ! CaseStudies.DutyMonitoringCase(resolver)
-  // system ! CaseStudies.QueriesCase(resolver)
-  system ! CaseStudies.InformationFetchCase(resolver)
+  system ! CaseStudies.QueriesCase(resolver)
+  // system ! CaseStudies.InformationFetchCase(resolver)
 }

@@ -5,7 +5,9 @@ import java.time.LocalDateTime
 
 final case class Duty(
     name: String,
-    holder: ActorRef[Message],
-    claimant: ActorRef[Message],
+    holder: Option[ActorRef[Message]],
+    pHolder: Option[Proposition],
+    claimant: Option[ActorRef[Message]],
+    pClaimant: Option[Proposition],
     relatedTo: List[Proposition]
 )

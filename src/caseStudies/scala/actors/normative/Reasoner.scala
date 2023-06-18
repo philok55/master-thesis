@@ -14,7 +14,7 @@ object Reasoner extends ReasonerActor {
     val input = resp.inputs(0)
     input match {
       case i: RequiredInstances => {
-        i.getType() match {
+        i.`type` match {
           case "yearly-income" => {
             msg match {
               case InformAct(a: IndexAgreement) => {

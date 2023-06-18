@@ -37,9 +37,15 @@ trait ReasonerActor {
           informationActor = Some(actor)
           Behaviors.same
         }
+        case m: RequestDuty =>
+          context.spawn(
+            dutyResponseHandler(m, eflintServer),
+            s"dresponse-handler-${java.util.UUID.randomUUID.toString()}"
+          )
+          Behaviors.same
         case m: QueryMessage =>
           context.spawn(
-            queryResponseHandler(m, eflintServer, enforcer),
+            queryResponseHandler(m, eflintServer),
             s"qresponse-handler-${java.util.UUID.randomUUID.toString()}"
           )
           Behaviors.same
@@ -51,7 +57,12 @@ trait ReasonerActor {
           pendingMessage match {
             case Some(pending) => {
               context.spawn(
-                phraseResponseHandler(pending, eflintServer, context.self, enforcer),
+                phraseResponseHandler(
+                  pending,
+                  eflintServer,
+                  context.self,
+                  enforcer
+                ),
                 s"presponse-handler-${java.util.UUID.randomUUID.toString()}"
               )
               pendingMessage = None
@@ -74,8 +85,7 @@ trait ReasonerActor {
 
   def queryResponseHandler(
       msg: QueryMessage,
-      eflintServer: ActorRef[NormActor.Message],
-      enforcer: Option[ActorRef[Message]] = None
+      eflintServer: ActorRef[NormActor.Message]
   )(implicit
       resolver: ActorRefResolver
   ): Behavior[NormActor.QueryResponse] = Behaviors.setup { context =>
@@ -85,51 +95,43 @@ trait ReasonerActor {
       phrase = phrase
     )
 
-    enforcer match {
-      case None =>
-        context.log.error(
-          "Reasoner received query before enforcer was registered."
+    Behaviors.receiveMessage {
+      case response: norms.NormActor.Response => {
+        println(
+          s"Reasoner received response. Query: $phrase; Response: $response"
         )
-        Behaviors.stopped
-      case Some(myValue) =>
-        Behaviors.receiveMessage {
-          case response: norms.NormActor.Response => {
-            println(
-              s"Reasoner received response. Query: $phrase; Response: $response"
-            )
-            msg match {
-              case m: RequestAct => {
-                if (response.success) m.replyTo ! Permitted(m.act)
-                else m.replyTo ! Forbidden(m.act)
-              }
-              case m: Request => {
-                if (response.success) m.replyTo ! Inform(m.proposition)
-                else {
-                  val np = Proposition(
-                    identifier = m.proposition.identifier,
-                    instance = m.proposition.instance,
-                    state = False
-                  )
-                  m.replyTo ! Inform(np)
-                }
-              }
-              case _ => println("NotImplementedError")
+        msg match {
+          case m: RequestAct => {
+            if (response.success) m.replyTo ! Permitted(m.act)
+            else m.replyTo ! Forbidden(m.act)
+          }
+          case m: Request => {
+            if (response.success) m.replyTo ! Inform(m.proposition)
+            else {
+              val np = Proposition(
+                identifier = m.proposition.identifier,
+                instance = m.proposition.instance,
+                state = False
+              )
+              m.replyTo ! Inform(np)
             }
-            Behaviors.stopped
           }
-          case response: norms.NormActor.QueryInputRequired => {
-            println(
-              s"Reasoner received input required. Query: $phrase; Response: $response"
-            )
-            Behaviors.same
-          }
-          case response: norms.Message => {
-            println(
-              s"Reasoner received unknown response. Query: $phrase; Response: $response"
-            )
-            Behaviors.same
-          }
+          case _ => println("NotImplementedError")
         }
+        Behaviors.stopped
+      }
+      case response: norms.NormActor.QueryInputRequired => {
+        println(
+          s"Reasoner received input required. Query: $phrase; Response: $response"
+        )
+        Behaviors.same
+      }
+      case response: norms.Message => {
+        println(
+          s"Reasoner received unknown response. Query: $phrase; Response: $response"
+        )
+        Behaviors.same
+      }
     }
   }
 
@@ -231,6 +233,38 @@ trait ReasonerActor {
     }
   }
 
+  def dutyResponseHandler(
+      msg: RequestDuty,
+      eflintServer: ActorRef[NormActor.Message]
+  )(implicit
+      resolver: ActorRefResolver
+  ): Behavior[norms.Message] = Behaviors.setup { context =>
+    val holder = msg.duty.pHolder match {
+      case Some(h) => EflintAdapter.propToEflintSimple(h)
+      case None    => ""
+    }
+    val claimant = msg.duty.pClaimant match {
+      case Some(c) => EflintAdapter.propToEflintSimple(c)
+      case None    => ""
+    }
+    eflintServer ! NormActor.FindDuties(
+      holder,
+      claimant,
+      context.self
+    )
+    Behaviors.receiveMessage {
+      case norms.ActiveDuty(duty) => {
+        println(s"Reasoner received duty: ${duty}")
+        val d = parseDuty(duty)
+        d match {
+          case Some(d) => msg.replyTo ! InformDuty(d)
+          case None    => {}
+        }
+        Behaviors.same
+      }
+    }
+  }
+
   def parseDuty(duty: norms.Duty)(implicit
       resolver: ActorRefResolver
   ): Option[Duty] = {
@@ -240,8 +274,10 @@ trait ReasonerActor {
           case (Left(holder), Left(claimant)) => {
             val d = Duty(
               name = value.fact_type,
-              holder = resolver.resolveActorRef[Message](holder),
-              claimant = resolver.resolveActorRef[Message](claimant),
+              holder = Some(resolver.resolveActorRef[Message](holder)),
+              None,
+              claimant = Some(resolver.resolveActorRef[Message](claimant)),
+              None,
               relatedTo = List() // TODO: parse relatedTo
             )
             Some(d)

@@ -55,6 +55,8 @@ object Owner extends ApplicationActor {
 
   final case class DisplayViolation(message: String) extends ApplicationMessage
 
+  final case class QueryDuties() extends ApplicationMessage
+
   override def handleApplicationMessage(
       message: ApplicationMessage,
       enforcer: ActorRef[Message],
@@ -102,6 +104,19 @@ object Owner extends ApplicationActor {
       }
       case m: DisplayViolation => {
         println(s"Owner portal displaying violation to user: ${m.message}")
+        Behaviors.same
+      }
+      case m: QueryDuties => {
+        val dObj = Duty(
+          "",
+          Some(self),
+          Some(new POwner(resolver.toSerializationFormat(self))),
+          None,
+          None,
+          List()
+        )
+        val msg = RequestDuty(dObj, self)
+        enforcer ! msg
         Behaviors.same
       }
     }

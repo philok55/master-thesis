@@ -2,11 +2,14 @@ package caseStudies
 
 import protocol._
 
+final class PUser(val name: String, override val state: TruthValue = True)
+    extends Proposition("user", List(PString(name)), state) {}
+
 final class POwner(val name: String, override val state: TruthValue = True)
-    extends Proposition("owner", List(PString(name)), state) {}
+    extends Proposition("owner", List(new PUser(name)), state) {}
 
 final class PTenant(val name: String, override val state: TruthValue = True)
-    extends Proposition("tenant", List(PString(name)), state) {}
+    extends Proposition("tenant", List(new PUser(name)), state) {}
 
 final class PDocument(val id: String, override val state: TruthValue = True)
     extends Proposition("document", List(PString(id)), state) {}
