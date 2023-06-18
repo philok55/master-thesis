@@ -39,7 +39,7 @@ trait InformationActor {
               m.replyTo ! Inform(p)
             }
             case Some(value) => {
-              println(s"Information actor found value for request: $value")
+              println(s"Information actor found value for request: $value. Sending to reasoner.")
               val p: Proposition = getProp(m.proposition, value)
               m.replyTo ! Inform(p)
             }

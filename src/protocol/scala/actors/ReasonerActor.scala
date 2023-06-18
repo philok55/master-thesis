@@ -9,6 +9,10 @@ import norms.NormActor
 
 trait ReasonerActor {
   final case class RegisterEnforcer(enforcer: ActorRef[Message]) extends Message
+  final case class RegisterInfoActor(actor: ActorRef[Message]) extends Message
+
+  var pendingMessage: Option[Message] = None
+  var informationActor: Option[ActorRef[Message]] = None
 
   def apply(
       eflintFile: String
@@ -23,21 +27,42 @@ trait ReasonerActor {
     }
 
   def listen(
-      eflint_server: ActorRef[NormActor.Message],
+      eflintServer: ActorRef[NormActor.Message],
       enforcer: Option[ActorRef[Message]] = None
   )(implicit resolver: ActorRefResolver): Behavior[Message] =
     Behaviors.receive { (context, message) =>
       message match {
-        case RegisterEnforcer(enf) => listen(eflint_server, Some(enf))
+        case RegisterEnforcer(enf) => listen(eflintServer, Some(enf))
+        case RegisterInfoActor(actor) => {
+          informationActor = Some(actor)
+          Behaviors.same
+        }
         case m: QueryMessage =>
           context.spawn(
-            queryResponseHandler(m, eflint_server, enforcer),
+            queryResponseHandler(m, eflintServer, enforcer),
             s"qresponse-handler-${java.util.UUID.randomUUID.toString()}"
           )
           Behaviors.same
+        case m: Inform => {
+          context.spawn(
+            phraseResponseHandler(m, eflintServer, context.self, enforcer),
+            s"presponse-handler-${java.util.UUID.randomUUID.toString()}"
+          )
+          pendingMessage match {
+            case Some(pending) => {
+              context.spawn(
+                phraseResponseHandler(pending, eflintServer, context.self, enforcer),
+                s"presponse-handler-${java.util.UUID.randomUUID.toString()}"
+              )
+              pendingMessage = None
+            }
+            case None => {}
+          }
+          Behaviors.same
+        }
         case m: Message =>
           context.spawn(
-            phraseResponseHandler(m, eflint_server, enforcer),
+            phraseResponseHandler(m, eflintServer, context.self, enforcer),
             s"presponse-handler-${java.util.UUID.randomUUID.toString()}"
           )
           Behaviors.same
@@ -49,13 +74,13 @@ trait ReasonerActor {
 
   def queryResponseHandler(
       msg: QueryMessage,
-      eflint_server: ActorRef[NormActor.Message],
+      eflintServer: ActorRef[NormActor.Message],
       enforcer: Option[ActorRef[Message]] = None
   )(implicit
       resolver: ActorRefResolver
   ): Behavior[NormActor.QueryResponse] = Behaviors.setup { context =>
     val phrase = EflintAdapter(msg)
-    eflint_server ! NormActor.Query(
+    eflintServer ! NormActor.Query(
       replyTo = context.self,
       phrase = phrase
     )
@@ -110,14 +135,15 @@ trait ReasonerActor {
 
   def phraseResponseHandler(
       msg: Message,
-      eflint_server: ActorRef[NormActor.Message],
+      eflintServer: ActorRef[NormActor.Message],
+      parent: ActorRef[Message],
       enforcer: Option[ActorRef[Message]] = None
   )(implicit
       resolver: ActorRefResolver
   ): Behavior[norms.Message] = Behaviors.setup { context =>
     val phrase = EflintAdapter(msg)
     println(s"Reasoner evaluating phrase: $phrase")
-    eflint_server ! NormActor.Phrase(
+    eflintServer ! NormActor.Phrase(
       phrase = phrase,
       handler = context.self
     )
@@ -176,13 +202,30 @@ trait ReasonerActor {
             println(
               s"Reasoner received input required. Phrase: $phrase; Response: $response"
             )
+            val prop: Option[Proposition] = getInformationProp(msg, response)
+            prop match {
+              case Some(r) => {
+                informationActor match {
+                  case Some(infoActor) => {
+                    pendingMessage = Some(msg)
+                    val message = Request(r, parent)
+                    infoActor ! message
+                  }
+                  case None =>
+                    context.log.error(
+                      "Reasoner received input required, but no information actor is registered."
+                    )
+                }
+              }
+              case None => {}
+            }
             Behaviors.same
           }
           case response: norms.Message => {
             context.log.error(
               s"Reasoner received unknown message from eFLINT. Phrase: $phrase; Response: $response"
             )
-            Behaviors.same
+            Behaviors.stopped
           }
         }
     }
@@ -215,4 +258,11 @@ trait ReasonerActor {
       }
     }
   }
+
+  def getInformationProp(
+      msg: Message,
+      resp: norms.DecisionInputRequired
+  )(implicit
+      resolver: ActorRefResolver
+  ): Option[Proposition]
 }

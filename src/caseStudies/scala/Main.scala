@@ -43,7 +43,7 @@ object CaseStudies {
       "owner1"
     )
     OwnerCreated(resolver.toSerializationFormat(owner))()
-    return List(enforcer, owner, database)
+    return List(reasoner, enforcer, owner, database)
   }
 
   def apply(): Behavior[Scenario] = Behaviors.receive { (context, message) =>
@@ -55,9 +55,10 @@ object CaseStudies {
         println("----------------------------------")
 
         val setup = genericSetup(context)
-        val enforcer = setup(0)
-        val owner = setup(1)
-        val database = setup(2)
+        val reasoner = setup(0)
+        val enforcer = setup(1)
+        val owner = setup(2)
+        val database = setup(3)
 
         val tenant1 = context.spawn(
           Tenant(enforcer, contacts = Map("owner" -> owner)),
@@ -99,9 +100,10 @@ object CaseStudies {
         println("----------------------------------")
 
         val setup = genericSetup(context)
-        val enforcer = setup(0)
-        val owner = setup(1)
-        val database = setup(2)
+        val reasoner = setup(0)
+        val enforcer = setup(1)
+        val owner = setup(2)
+        val database = setup(3)
 
         val tenant1 = context.spawn(
           Tenant(enforcer, contacts = Map("owner" -> owner)),
@@ -150,9 +152,10 @@ object CaseStudies {
         println("----------------------------------")
 
         val setup = genericSetup(context)
-        val enforcer = setup(0)
-        val owner = setup(1)
-        val database = setup(2)
+        val reasoner = setup(0)
+        val enforcer = setup(1)
+        val owner = setup(2)
+        val database = setup(3)
 
         val tenant1 = context.spawn(
           Tenant(enforcer, contacts = Map("owner" -> owner)),
@@ -185,9 +188,10 @@ object CaseStudies {
         println("----------------------------------")
 
         val setup = genericSetup(context)
-        val enforcer = setup(0)
-        val owner = setup(1)
-        val database = setup(2)
+        val reasoner = setup(0)
+        val enforcer = setup(1)
+        val owner = setup(2)
+        val database = setup(3)
       }
       case m: InformationFetchCase => {
         println("----------------------------------")
@@ -195,31 +199,41 @@ object CaseStudies {
         println("----------------------------------")
 
         val setup = genericSetup(context)
-        val enforcer = setup(0)
-        val owner = setup(1)
-        val database = setup(2)
+        val reasoner = setup(0)
+        val enforcer = setup(1)
+        val owner = setup(2)
+        val database = setup(3)
 
         val taxAuthority = context.spawn(TaxAuthority(), "taxAuth")
+        reasoner ! Reasoner.RegisterInfoActor(taxAuthority)
+
         val tenant1 = context.spawn(
           Tenant(enforcer, contacts = Map("owner" -> owner)),
           "tenant1"
         )
+        owner ! Owner.CreateTenant(tenant1)
 
         Thread.sleep(1000)
+
+        owner ! Owner.CreateAgreement(
+          id = "agreement1",
+          fileName = "agreement1.pdf",
+          content = "Content of agreement 1.",
+          tenantAddress = resolver.toSerializationFormat(tenant1),
+          price = 766,
+          social = true
+        )
 
         // Register tenant income (would happen from outside system)
         taxAuthority ! TaxAuthority.AddObject(
           s"income-${resolver.toSerializationFormat(tenant1)}",
-          58000
+          40000
         )
 
         Thread.sleep(1000)
 
-        taxAuthority ! Request(
-          new PIncome(new PTenant(resolver.toSerializationFormat(tenant1)), 0),
-          tenant1
-        )
-        // TODO: go through reasoner for request
+        // Indexation needs tenant income for decision.
+        owner ! Owner.IndexAgreement("agreement1", 3)
       }
     }
     Thread.sleep(5000)
@@ -236,8 +250,8 @@ object CaseStudiesMain extends App {
   // Uncomment the one that should be run.
 
   // system ! CaseStudies.AccessControlCase(resolver)
-  system ! CaseStudies.ExPostCase(resolver)
+  // system ! CaseStudies.ExPostCase(resolver)
   // system ! CaseStudies.DutyMonitoringCase(resolver)
   // system ! CaseStudies.QueriesCase(resolver)
-  // system ! CaseStudies.InformationFetchCase(resolver)
+  system ! CaseStudies.InformationFetchCase(resolver)
 }
