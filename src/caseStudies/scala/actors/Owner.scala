@@ -107,6 +107,7 @@ object Owner extends ApplicationActor {
         Behaviors.same
       }
       case m: QueryDuties => {
+        println(s"Owner querying for active duties")
         val dObj = Duty(
           "",
           Some(self),
@@ -115,9 +116,22 @@ object Owner extends ApplicationActor {
           None,
           List()
         )
-        val msg = RequestDuty(dObj, self)
-        enforcer ! msg
+        sendQuery(Right(dObj), enforcer, self)
         Behaviors.same
       }
     }
+
+  override def dutyReceived(duty: Duty): Unit = println(
+    s"Active duty ${duty.name} received by owner"
+  )
+
+  override def dutyTerminated(duty: Duty): Unit = println(
+    s"Teminated duty ${duty.name} received by owner"
+  )
+
+  override def requestRejected(obj: Either[Act, Duty]): Unit = obj match {
+    case Right(duty) => {
+      println(s"Owner: duty request rejected")
+    }
+  }
 }

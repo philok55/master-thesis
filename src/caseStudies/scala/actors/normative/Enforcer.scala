@@ -37,15 +37,31 @@ object Enforcer extends EnforcerActor {
 
   override def acceptOrSendReject(message: Message): Boolean = message match {
     case m: RequestAct => {
-      val tenantAddress = m.act.pActor.instance(0) match {
-        case PString(name) => name
-        case _             => ""
+      val tenantAddress = m.act.pActor match {
+        case a: PTenant => a.name
+        case _          => ""
       }
       if (KnowledgeBase.tenants.contains(tenantAddress)) {
         true
       } else {
-        m.replyTo ! Rejected(m.act)
+        m.replyTo ! Reject(Left(m.act))
         false
+      }
+    }
+    case RequestDuty(duty, replyTo) => {
+      duty match {
+        case Duty(_, Some(holder), _, _, _, _) => {
+          if (holder == replyTo) {
+            true
+          } else {
+            replyTo ! Reject(Right(duty))
+            false
+          }
+        }
+        case _ => {
+          replyTo ! Reject(Right(duty))
+          false
+        }
       }
     }
     case _ => true
@@ -59,13 +75,25 @@ object Enforcer extends EnforcerActor {
       case _ => println(s"Enforcer: unhandled proposition: ${proposition}")
     }
   }
-  
+
   override def handleInformDuty(duty: Duty): Unit = {
     println(s"Enforcer: received newly active duty: ${duty.name}")
+    duty.holder match {
+      case Some(holder) => holder ! InformDuty(duty)
+    }
+    duty.claimant match {
+      case Some(claimant) => claimant ! InformDuty(duty)
+    }
   }
-  
+
   override def handleTerminatedDuty(duty: Duty): Unit = {
     println(s"Enforcer: received terminated duty: ${duty.name}")
+    duty.holder match {
+      case Some(holder) => holder ! InformDutyTerminated(duty)
+    }
+    duty.claimant match {
+      case Some(claimant) => claimant ! InformDutyTerminated(duty)
+    }
   }
 
   override def actPermitted(

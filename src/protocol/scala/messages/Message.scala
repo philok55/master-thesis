@@ -24,4 +24,4 @@ final case class Permitted(act: Act) extends Message
 final case class Forbid(act: Act) extends Message
 final case class Forbidden(act: Act) extends Message
 
-final case class Rejected(act: Act) extends Message
+final case class Reject(obj: Either[Act, Duty]) extends Message

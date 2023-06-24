@@ -23,9 +23,9 @@ trait ApplicationActor {
           case m: Permit               => actPermitted(m.act, true)
           case m: Forbidden            => actForbidden(m.act)
           case m: Forbid               => actForbidden(m.act, true)
-          case m: Rejected             => actRejected(m.act)
           case m: InformDuty           => dutyReceived(m.duty)
           case m: InformDutyTerminated => dutyTerminated(m.duty)
+          case m: Reject               => requestRejected(m.obj)
           case _ =>
             println(
               "Protocol violated: invalid message received in response to RequestAct"
@@ -56,7 +56,7 @@ trait ApplicationActor {
 
   def actForbidden(act: Act, enforced: Boolean = false): Unit = {}
 
-  def actRejected(act: Act): Unit = {}
+  def requestRejected(obj: Either[Act, Duty]): Unit = {}
 
   def dutyReceived(duty: Duty): Unit = {}
 

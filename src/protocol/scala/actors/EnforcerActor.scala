@@ -114,6 +114,7 @@ trait EnforcerActor {
       Behaviors.receiveMessage {
         case m: InformDuty => {
           println(s"Enforcer received duty: ${m.duty}")
+          message.replyTo ! m
           Behaviors.same
         }
         case _ => {

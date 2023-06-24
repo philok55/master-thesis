@@ -214,7 +214,7 @@ object CaseStudies {
         Thread.sleep(1000)
         // Creates duty to pay back deposit
         owner ! Owner.RegisterAgreementTermination("agreement1")
-
+        Thread.sleep(1000)
         // Owner queries for duties (e.g. when loading the UI)
         owner ! Owner.QueryDuties()
       }
@@ -274,9 +274,9 @@ object CaseStudiesMain extends App {
   // NOTE: currently only one case can be run at a time.
   // Uncomment the one that should be run.
 
-  // system ! CaseStudies.AccessControlCase(resolver)
+  system ! CaseStudies.AccessControlCase(resolver)
   // system ! CaseStudies.ExPostCase(resolver)
   // system ! CaseStudies.DutyMonitoringCase(resolver)
-  system ! CaseStudies.QueriesCase(resolver)
+  // system ! CaseStudies.QueriesCase(resolver)
   // system ! CaseStudies.InformationFetchCase(resolver)
 }

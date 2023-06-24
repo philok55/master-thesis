@@ -48,10 +48,20 @@ object Tenant extends ApplicationActor {
         println(s"Tenant: access request to ${a.documentId} forbidden")
     }
 
-  override def actRejected(act: Act): Unit = act match {
-    case a: AccessDocument =>
-      println(s"Tenant: access request to ${a.documentId} rejected")
+  override def requestRejected(obj: Either[Act, Duty]): Unit = obj match {
+    case Left(act) => {
+      act match {
+        case a: AccessDocument =>
+          println(s"Tenant: access request to ${a.documentId} rejected")
+      }
+    }
   }
 
-  override def dutyReceived(duty: Duty): Unit = println("Duty received")
+  override def dutyReceived(duty: Duty): Unit = println(
+    s"Active duty ${duty.name} received by tenant"
+  )
+
+  override def dutyTerminated(duty: Duty): Unit = println(
+    s"Terminated duty ${duty.name} received by tenant"
+  )
 }
