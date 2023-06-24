@@ -8,6 +8,11 @@ import akka.actor.typed.scaladsl._
 import scala.collection.Set
 import norms.NormActor
 
+/**
+ * Abstract information actor implementation.
+ * 
+ * Implement getKey and getProp to define the information actor's behavior.
+ */
 trait InformationActor {
   protected object KnowledgeBase {
     var objects: Map[String, Any] = Map()
@@ -39,7 +44,9 @@ trait InformationActor {
               m.replyTo ! Inform(p)
             }
             case Some(value) => {
-              println(s"Information actor found value for request: $value. Sending to reasoner.")
+              println(
+                s"Information actor found value for request: $value. Sending to reasoner."
+              )
               val p: Proposition = getProp(m.proposition, value)
               m.replyTo ! Inform(p)
             }
@@ -49,7 +56,19 @@ trait InformationActor {
       }
     }
 
+  /**
+   * Returns the key in the knowledge base for the given request.
+   *
+   * @param message
+   */
   def getKey(message: Request): String
 
+  /**
+   * Returns a new proposition by inserting the found value in 
+   * the correct field of the original proposition.
+   *
+   * @param prop the original proposition
+   * @param value the value found in the knowledge base
+   */
   def getProp(prop: Proposition, value: Any): Proposition
 }

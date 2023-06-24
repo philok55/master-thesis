@@ -6,6 +6,15 @@ import akka.actor.typed.ActorRefResolver
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl._
 
+/**
+ * Abstract monitor actor implementation.
+ * 
+ * Implement eventReceived to define the monitor actor's behavior.
+ * 
+ * @param reasoner The reasoner actor
+ * @param enforcer The enforcer actor
+ * @param subscription The subscription to subscribe to
+ */
 trait MonitorActor {
   def apply(
       reasoner: ActorRef[Message],

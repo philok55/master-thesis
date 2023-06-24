@@ -7,6 +7,17 @@ import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl._
 import norms.NormActor
 
+/**
+ * Abstract reasoner actor implementation.
+ * 
+ * Most functionality is fully generically implemented.
+ * 
+ * To use with Open types and information actors:
+ *   - implement method getInformationProp
+ *   - register information actor by sending RegisterInfoActor msg
+ * 
+ * @param eflintFile The path to the eFLINT file
+ */
 trait ReasonerActor {
   final case class RegisterEnforcer(enforcer: ActorRef[Message]) extends Message
   final case class RegisterInfoActor(actor: ActorRef[Message]) extends Message
@@ -54,6 +65,8 @@ trait ReasonerActor {
             phraseResponseHandler(m, eflintServer, context.self, enforcer),
             s"presponse-handler-${java.util.UUID.randomUUID.toString()}"
           )
+          // If inform came from info actor, 
+          // retry pending message
           pendingMessage match {
             case Some(pending) => {
               context.spawn(
@@ -239,6 +252,8 @@ trait ReasonerActor {
   )(implicit
       resolver: ActorRefResolver
   ): Behavior[norms.Message] = Behaviors.setup { context =>
+    // Use simple serialization (without modifiers or quotes) 
+    // so we match with eFLINT string representation of fields
     val holder = msg.duty.pHolder match {
       case Some(h) => EflintAdapter.propToEflintSimple(h)
       case None    => ""
@@ -295,6 +310,13 @@ trait ReasonerActor {
     }
   }
 
+  /**
+   * Returns the proposition that the reasoner should 
+   * use in the request to the information actor.
+   *
+   * @param msg The message that caused the input required exception.
+   * @param resp The input required exception.
+   */
   def getInformationProp(
       msg: Message,
       resp: norms.DecisionInputRequired

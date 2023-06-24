@@ -6,6 +6,14 @@ import akka.actor.typed.ActorRefResolver
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl._
 
+
+/** 
+ * Subscriptions to system events. System events are sent to all monitors.
+ * 
+ * To create a new subscription that monitors can subscribe to, create a new
+ * trait that extends MonitorSubscription and create system events that distribute
+ * messages to this subscription.
+ */
 trait SystemEvent {
   def apply(): Unit = {
     MonitorActors.receive(this)

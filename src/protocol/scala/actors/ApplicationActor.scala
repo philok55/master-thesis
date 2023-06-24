@@ -9,6 +9,14 @@ import scala.collection.Map
 
 trait ApplicationMessage extends Message {}
 
+/**
+ * Abstract application actor implementation.
+ * 
+ * Implement abstract methods to define the application actor's behavior.
+ * 
+ * @param enforcer the enforcer actor
+ * @param contacts other actors the application actor may need to communicate with
+ */
 trait ApplicationActor {
   def apply(
       enforcer: ActorRef[Message],

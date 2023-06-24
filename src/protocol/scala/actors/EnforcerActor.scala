@@ -9,6 +9,16 @@ import scala.collection.Set
 import java.time.LocalDateTime
 import scala.collection.Map
 
+
+/**
+ * Abstract enforcer actor implementation.
+ * 
+ * Spawn protocolRequestsLoop in the actor's apply method.
+ * Implement abstract methods to define the enforcer actor's behavior.
+ * 
+ * blockedActions is a set of action names that the enforcer will actively 
+ * try to prevent from happening if they are forbidden by the reasoner.
+ */
 trait EnforcerActor {
   def blockedActions = Set[String]()
 

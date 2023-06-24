@@ -2,8 +2,8 @@ package protocol
 
 trait PVal {
   def getValue(): Any = this match {
-    case PString(value)                   => value
-    case PInt(value)                      => value
+    case PString(value)                     => value
+    case PInt(value)                        => value
     case Proposition(name, instance, state) => null
   }
 }

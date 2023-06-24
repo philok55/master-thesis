@@ -68,7 +68,12 @@ object Database extends ApplicationActor {
       case m: AddAgreement => {
         KnowledgeBase.agreements =
           KnowledgeBase.agreements + (m.document.id -> (m.document, m.tenantAddress, m.price))
-        RentalAgreementCreated(m.document.id, m.tenantAddress, m.price, m.social)()
+        RentalAgreementCreated(
+          m.document.id,
+          m.tenantAddress,
+          m.price,
+          m.social
+        )()
         Behaviors.same
       }
       case m: GetAgreement => {

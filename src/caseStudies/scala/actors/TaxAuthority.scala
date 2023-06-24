@@ -14,14 +14,14 @@ object TaxAuthority extends InformationActor {
     val prop = message.proposition
     prop match {
       case p: PIncome => s"income-${p.tenant.name}"
-      case _ => ""
+      case _          => ""
     }
   }
 
   def getProp(prop: Proposition, value: Any): Proposition = {
     prop match {
       case p: PIncome => new PIncome(p.tenant, value.asInstanceOf[Int])
-      case _ => prop
+      case _          => prop
     }
   }
 }
