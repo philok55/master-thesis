@@ -1,4 +1,4 @@
-# Master thesis project: a communication protocol for normative ator systems
+# Master thesis project: a communication protocol for normative actor systems
 This is the implementation repository for my Master Thesis, the graduation project for the MSc. Software Engineering at the University of Amsterdam.
 
 It is a Proof-of-Concept implementation of the protocol design I created for usage within normative actor systems. The generic module for the protocol is in `src/protocol`, and `src/caseStudies` contains a collection of case studies using the protocol in the context of a hypothetical real estate management application.
